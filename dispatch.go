@@ -7,14 +7,14 @@ import (
 
 type LogDispatcher struct {
 	w io.Writer
-	p Priority
 	ch chan *LogEntry
 }
 
-func (lw *LogDispatcher) Send(priority Priority, p string) {
-	entry := LogEntry { w: lw.w, msg: p }
+func (lw *LogDispatcher) Send(message string) {
+	entry := LogEntry { w: lw.w, msg: message }
 	lw.ch <- &entry
 }
+
 
 func NewLogDispatcher(writer io.Writer) *LogDispatcher {
 	lw := LogDispatcher{ w: writer, ch: logchan }
@@ -25,6 +25,3 @@ func NewConsoleDispatcher() *LogDispatcher {
 	return NewLogDispatcher(os.Stdout)
 }
 
-func NewSyslogDispatcher(facility, priority int) *LogDispatcher {
-	return nil
-}

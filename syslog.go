@@ -1,5 +1,11 @@
 package golog
 
+import (
+	"net"
+	"os"
+	"fmt"
+)
+
 type Priority int
 
 const (
@@ -28,9 +34,38 @@ const (
 	LOCAL7
 )
 
-type Writer struct {
-	priority Priority
-	facility Facility
+type SyslogWriter struct {
+	conn net.Conn
 }
 
+func connectToSyslog() (sock net.Conn, err error) {
+	logTypes := []string { "unixgram", "unix" }
+	logPaths := []string { "/dev/log", "/var/run/syslog" }
+
+	for _, network := range logTypes {
+		for _, path := range logPaths {
+			sock, err = net.Dial(network, path)
+			if err == nil {
+				fmt.Fprintf(os.Stderr, "syslog uses %s:%s\n", network, path)
+				return sock, nil
+			}
+		}
+	}
+	return nil, err
+	
+}
+
+func NewSyslogWriter() (w *SyslogWriter, err error) {
+	sock, err := connectToSyslog()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error SyslogWriter: %s\n", err.Error())
+		return nil, err
+	}
+
+	return &SyslogWriter { conn: sock }, nil
+}
+
+func (w *SyslogWriter) Write(b []byte) (int, error) {
+	return w.conn.Write(b)
+}
 
