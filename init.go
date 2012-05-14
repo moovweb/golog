@@ -2,9 +2,9 @@ package golog
 
 import "io"
 
-var logchan = make(chan *LogEntry, 10)
+var logchan = make(chan *LogMsg, 10)
 
-type LogEntry struct {
+type LogMsg struct {
 	w io.Writer
 	msg string
 }

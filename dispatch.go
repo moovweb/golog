@@ -7,11 +7,11 @@ import (
 
 type LogDispatcher struct {
 	w io.Writer
-	ch chan *LogEntry
+	ch chan *LogMsg
 }
 
 func (lw *LogDispatcher) Send(message string) {
-	entry := LogEntry { w: lw.w, msg: message }
+	entry := LogMsg { w: lw.w, msg: message }
 	lw.ch <- &entry
 }
 

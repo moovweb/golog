@@ -1,6 +1,16 @@
 package golog
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
+
+type LogEntry struct {
+	prefix string
+	priority Priority
+	msg string
+	created time.Time //time.Now()
+}
 
 type Logger interface {
 	Logf(Priority, string, ... interface{})
