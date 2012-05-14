@@ -2,29 +2,29 @@ package golog
 
 import (
 	"io"
+	"os"
 )
 
-type LogEntry struct {
+type LogDispatcher struct {
 	w io.Writer
-	msg []byte
-}
-
-type LogChanWriter struct {
-	w io.Writer
+	p Priority
 	ch chan *LogEntry
 }
 
-func NewLogChanWriter(writer io.Writer) *LogChanWriter {
-	lw := LogChanWriter{ w: writer, ch: logchan }
+func (lw *LogDispatcher) Send(priority Priority, p string) {
+	entry := LogEntry { w: lw.w, msg: p }
+	lw.ch <- &entry
+}
+
+func NewLogDispatcher(writer io.Writer) *LogDispatcher {
+	lw := LogDispatcher{ w: writer, ch: logchan }
 	return &lw
 }
 
-func (lw *LogChanWriter) Write(p []byte) (n int, err error) {
-	entry := LogEntry { w: lw.w, msg: p }
-	lw.ch <- &entry
-	return len(p), nil
+func NewConsoleDispatcher() *LogDispatcher {
+	return NewLogDispatcher(os.Stdout)
 }
 
-func (lw *LogChanWriter) WriteString(s string) (n int, err error) {
-	return lw.Write([]byte(s))
+func NewSyslogDispatcher(facility, priority int) *LogDispatcher {
+	return nil
 }
