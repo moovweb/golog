@@ -5,6 +5,24 @@ import (
 	"time"
 )
 
+// some constants
+type Priority int
+
+const (
+	// From /usr/include/sys/syslog.h.
+	// These are the same on Linux, BSD, and OS X.
+	LOG_EMERG Priority = iota
+	LOG_ALERT
+	LOG_CRIT
+	LOG_ERR
+	LOG_WARNING
+	LOG_NOTICE
+	LOG_INFO
+	LOG_DEBUG
+)
+
+
+
 type LogEntry struct {
 	prefix string
 	priority Priority
@@ -21,6 +39,12 @@ func NewLogger() *Logger {
 	return &Logger { prefix: "", processors: map[string]LogProcessor{} }
 }
 
+func (dl *Logger) SetPriority(processorName string, newPriority Priority) {
+	proc := dl.processors[processorName]
+	if proc != nil {
+		proc.SetPriority(newPriority)
+	}
+}
 
 func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 	dl.processors[name] = processor
@@ -45,34 +69,34 @@ func (dl *Logger) Log(p Priority, format string, args ... interface{}) {
 }
 
 func (dl *Logger) Debug(format string, args ... interface{}) {
-	dl.Log(LOG_DEBUG, format, args)
+	dl.Log(LOG_DEBUG, format, args...)
 }
 
 func (dl *Logger) Info(format string, args ... interface{}) {
-	dl.Log(LOG_INFO, format, args)
+	dl.Log(LOG_INFO, format, args...)
 }
 
 func (dl *Logger) Notice(format string, args ... interface{}) {
-	dl.Log(LOG_NOTICE, format, args)
+	dl.Log(LOG_NOTICE, format, args...)
 }
 
 func (dl *Logger) Warning(format string, args ... interface{}) {
-	dl.Log(LOG_WARNING, format, args)
+	dl.Log(LOG_WARNING, format, args...)
 }
 
 func (dl *Logger) Error(format string, args ... interface{}) {
-	dl.Log(LOG_ERR, format, args)
+	dl.Log(LOG_ERR, format, args...)
 }
 
 func (dl *Logger) Critical(format string, args ... interface{}) {
-	dl.Log(LOG_CRIT, format, args)
+	dl.Log(LOG_CRIT, format, args...)
 }
 
 func (dl *Logger) Alert(format string, args ... interface{}) {
-	dl.Log(LOG_ALERT, format, args)
+	dl.Log(LOG_ALERT, format, args...)
 }
 
 func (dl *Logger) Emergency(format string, args ... interface{}) {
-	dl.Log(LOG_EMERG, format, args)
+	dl.Log(LOG_EMERG, format, args...)
 }
 

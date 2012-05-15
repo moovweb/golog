@@ -5,23 +5,9 @@ import (
 	"os"
 	"fmt"
 	"errors"
-	"time"
+	"sync"
 )
 
-type Priority int
-
-const (
-	// From /usr/include/sys/syslog.h.
-	// These are the same on Linux, BSD, and OS X.
-	LOG_EMERG Priority = iota
-	LOG_ALERT
-	LOG_CRIT
-	LOG_ERR
-	LOG_WARNING
-	LOG_NOTICE
-	LOG_INFO
-	LOG_DEBUG
-)
 
 type Facility int
 
@@ -36,15 +22,14 @@ const (
 	LOCAL7
 )
 
-func connectToSyslog() (sock net.Conn, err error) {
+func unixSyslog() (sock net.Conn, err error) {
 	logTypes := []string { "unixgram", "unix" }
 	logPaths := []string { "/dev/log", "/var/run/syslog" }
-
+	
 	for _, network := range logTypes {
 		for _, path := range logPaths {
 			sock, err = net.Dial(network, path)
 			if err == nil {
-				fmt.Fprintf(os.Stderr, "syslog uses %s:%s\n", network, path)
 				return sock, nil
 			}
 		}
@@ -54,13 +39,14 @@ func connectToSyslog() (sock net.Conn, err error) {
 }
 
 type SyslogProcessor struct {
+	mu sync.RWMutex
 	priority Priority
 	facility Facility
 	dispatcher *LogDispatcher
 }
 
 func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
-	sw, err := connectToSyslog()
+	sw, err := unixSyslog()
 	if err != nil {
 		errMsg := fmt.Sprintf("Error in NewSyslogProcessor: %s", err.Error())
 		return nil, errors.New(errMsg)
@@ -70,13 +56,25 @@ func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
 	return &SyslogProcessor { facility: f, priority: p, dispatcher: dsp }, nil
 }
 
-const syslogMsgFormat = "<%d>%s %s: %s\n"
+func (su *SyslogProcessor) SetPriority(priority Priority) {
+	su.mu.Lock()
+	su.priority = priority
+	su.mu.Unlock()
+}
+
+func (su *SyslogProcessor) GetPriority() Priority {
+	su.mu.RLock()
+	defer su.mu.RUnlock()
+	return su.priority
+}
+
+const syslogMsgFormat = "<%d>%s: %s\n"
 func (su *SyslogProcessor) Process(entry *LogEntry) {
-	if entry.priority <= su.priority {
+	if entry.priority <= su.GetPriority() {
 		key := (int(su.facility) * 8) + int(entry.priority)
-		timestr := time.Unix(entry.created.Unix(), 0).UTC().Format(time.RFC3339)
-		prefix := entry.prefix
-		msg := fmt.Sprintf(syslogMsgFormat, key, timestr, prefix, entry.msg)
+		msg := entry.prefix + entry.msg
+		msg = fmt.Sprintf(syslogMsgFormat, key, os.Args[0], msg)
 		su.dispatcher.Send(msg)
 	}
 }
+
