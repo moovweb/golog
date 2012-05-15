@@ -87,23 +87,37 @@ type LogEntry struct {
 	created time.Time		// Time this message was created.
 }
 
-// Set the priority of the Processor with the given name.
+// Set/Get the priority of the Processor with the given name.
 // If no processor with the given name exists, we return an error.
-func (dl *Logger) SetPriority(processorName string, newPriority Priority) error {
+func (dl *Logger) SetPriority(procName string, newPriority Priority) error {
 	newPriority = BoundPriority(newPriority)
-	proc := dl.processors[processorName]
+	proc := dl.processors[procName]
 	if proc != nil {
 		proc.SetPriority(newPriority)
 		return nil
 	}
-	return errors.New("Couldn't find log processor with name '" + processorName + "'")
+	return errors.New("Couldn't find log processor with name '" + procName + "'")
 }
 
+func (dl *Logger) GetPriority(procName string) (Priority, error) {
+	proc := dl.processors[procName]
+	if proc != nil {
+		return proc.GetPriority(), nil
+	}
+	return Priority(0), errors.New("Coudln't find log processor with name '" + procName + "'")
+}
+
+// Add processors to this logger with the given name.  Names need to be 
+// unique against all other processors.  If a name conflict arises, we
+// simply override the old processor with the same name with the new one.
 func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 	dl.processors[name] = processor
 }
 
 
+// Begin Logging interface.  The following methods are used for logging
+// messages to whatever processors this logger is associated with.
+//
 func (dl *Logger) LogP(priority Priority, prefix string, format string, args ... interface{}) {
 	message := fmt.Sprintf(format, args...)
 	if len(message) == 0 ||  message[len(message)-1] != '\n' {
