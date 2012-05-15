@@ -107,6 +107,14 @@ func (dl *Logger) GetPriority(procName string) (Priority, error) {
 	return Priority(0), errors.New("Coudln't find log processor with name '" + procName + "'")
 }
 
+func (dl *Logger) GetPriorities() map[string]Priority {
+	pmap := map[string]Priority{}
+	for name, proc := range(dl.processors) {
+		pmap[name] = proc.GetPriority()
+	}
+	return pmap
+}
+
 // Add processors to this logger with the given name.  Names need to be 
 // unique against all other processors.  If a name conflict arises, we
 // simply override the old processor with the same name with the new one.
