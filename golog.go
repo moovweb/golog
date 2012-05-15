@@ -35,10 +35,6 @@ type Logger struct {
 	processors map[string]LogProcessor
 }
 
-func NewLogger() *Logger {
-	return &Logger { prefix: "", processors: map[string]LogProcessor{} }
-}
-
 func (dl *Logger) SetPriority(processorName string, newPriority Priority) {
 	proc := dl.processors[processorName]
 	if proc != nil {
@@ -52,6 +48,10 @@ func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 
 func (dl *Logger) LogP(p Priority, prefix string, format string, args ... interface{}) {
 	message := fmt.Sprintf(format, args...)
+	if len(message) == 0 ||  message[len(message)-1] != '\n' {
+		message = message + "\n"
+	}
+
 	entry := &LogEntry {
 		prefix: prefix,
 		priority: p,
@@ -98,5 +98,10 @@ func (dl *Logger) Alert(format string, args ... interface{}) {
 
 func (dl *Logger) Emergency(format string, args ... interface{}) {
 	dl.Log(LOG_EMERG, format, args...)
+}
+
+
+func NewLogger() *Logger {
+	return &Logger { prefix: "", processors: map[string]LogProcessor{} }
 }
 

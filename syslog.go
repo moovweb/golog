@@ -68,7 +68,7 @@ func (su *SyslogProcessor) GetPriority() Priority {
 	return su.priority
 }
 
-const syslogMsgFormat = "<%d>%s: %s\n"
+const syslogMsgFormat = "<%d>%s: %s"
 func (su *SyslogProcessor) Process(entry *LogEntry) {
 	if entry.priority <= su.GetPriority() {
 		key := (int(su.facility) * 8) + int(entry.priority)
