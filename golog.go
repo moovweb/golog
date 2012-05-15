@@ -1,3 +1,15 @@
+// The golog package is a logging framework for the Go language based on the 
+// go routine and channel features of the language.  In essence, log 
+// messages sent to a logger are sent through a global channel where a 
+// go routine listens to and services each log write serially.
+//
+// As of right now, all messages are sent through a single logger channel,
+// guranteeing serialization of log messages.  In the future, golog will
+// switch to the model of having a channel and go routine per resource
+// (such as file, network, console, etc...) so that writes to any single 
+// resource are serialized, but writes to different resources can be 
+// parallelized.
+//
 package golog
 
 import (
@@ -8,10 +20,13 @@ import (
 	"strconv"
 )
 
-// some constants
+// ****************************************************************************
+// Log Priority used to filter messages sent to the loggers.
+//
 type Priority int
 
 const (
+	// Using syslog standard priorities.
 	// From /usr/include/sys/syslog.h.
 	// These are the same on Linux, BSD, and OS X.
 	LOG_EMERG Priority = iota
@@ -24,6 +39,8 @@ const (
 	LOG_DEBUG
 )
 
+// If a priority is out of bounds given any input, we'll simply
+// truncate it to the closest valid priority.
 func BoundPriority(priority Priority) Priority {
 	if priority < LOG_EMERG {
 		priority = LOG_EMERG
@@ -47,18 +64,31 @@ func (p Priority) String() string {
 	return "UNKNOWN(" + strconv.Itoa(int(p)) + ")"
 }
 
-type LogEntry struct {
-	prefix string
-	priority Priority
-	msg string
-	created time.Time //time.Now()
-}
 
+// ****************************************************************************
+// The actual Logger structure, methods, and components.
+// The current Logger is implemented by holding a map of LogProcessors.
+// A new Logger can be created by calling the NewLogger methods further below.
+// A Logger will be initialized with zero processors to begin with, and thus,
+// will need to have LogProcessors added to it with AddProcessor before it
+// can begin logging.
+//
 type Logger struct {
+	// prefix used to prepend to logs if no other prefix is supplied.
 	prefix string
 	processors map[string]LogProcessor
 }
 
+// Storage object used to pass the log data over to the Processor.
+type LogEntry struct {
+	prefix string				// Prefix to prepend to the log message.
+	priority Priority		// Priority of the log message.
+	msg string					// The actual message payload
+	created time.Time		// Time this message was created.
+}
+
+// Set the priority of the Processor with the given name.
+// If no processor with the given name exists, we return an error.
 func (dl *Logger) SetPriority(processorName string, newPriority Priority) error {
 	newPriority = BoundPriority(newPriority)
 	proc := dl.processors[processorName]
@@ -72,6 +102,7 @@ func (dl *Logger) SetPriority(processorName string, newPriority Priority) error 
 func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 	dl.processors[name] = processor
 }
+
 
 func (dl *Logger) LogP(priority Priority, prefix string, format string, args ... interface{}) {
 	message := fmt.Sprintf(format, args...)
@@ -127,13 +158,22 @@ func (dl *Logger) Emergency(format string, args ... interface{}) {
 	dl.Log(LOG_EMERG, format, args...)
 }
 
-
+// Create a new empty Logger with the given prefix.
+// The prefix will be prepended to every log message unless 
+// LogP(...) is used, in which case, the prefix supplied by the 'prefix'
+// parameter will be used instead.
+//
 func NewLogger(prefix string) *Logger {
 	return &Logger { prefix: prefix, processors: map[string]LogProcessor{} }
 }
 
 
-
+// ****************************************************************************
+// The following section covers the part of the Logger which listens to the
+// channel for new messages to write.  All messages that are logged are 
+// eventually sent to this channel, and the following go routine services them 
+// to their appropriate Writer objects.
+//
 var logchan chan *LogMsg
 
 const logQueueSize = 512
@@ -145,3 +185,5 @@ func Init() {
 		}
 	}()
 }
+
+

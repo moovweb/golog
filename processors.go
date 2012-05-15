@@ -2,6 +2,17 @@ package golog
 
 import "sync"
 
+// ***************************************************************************
+// LogProcessor interface defines the method that we expect all LogProcessors
+// to have.  For most intents and purposes, a DefaultProcessor should suffice,
+// however if special formatting is required, a new Processor could be made
+// (see syslog.go).  
+//
+// The LogProcessor also offers the ability to change its default Priority
+// level at runtime using the SetPriority(...) method.  Implementing 
+// Processors need to make sure that SetPriority and GetPriority are 
+// thread safe.  Use the DefaultProcessor as an example.
+//
 type LogProcessor interface {
 	GetPriority() Priority
 	SetPriority(Priority)
@@ -9,11 +20,13 @@ type LogProcessor interface {
 }
 
 type DefaultProcessor struct {
-	mu sync.RWMutex
-	priority Priority
-	dispatcher *LogDispatcher
+	mu sync.RWMutex							// Read/Write Lock used to protect the priority.
+	priority Priority						// Messages need to be at least this important to get through.
+	dispatcher *LogDispatcher		// Dispatcher used to send messages to the channel
 }
 
+// Atomically set the new priority.  All accesses to priority need to be
+// through GetPriority in order to maintain thread safety.
 func (df *DefaultProcessor) SetPriority(p Priority) {
 	p = BoundPriority(p)
 	df.mu.Lock()
@@ -34,6 +47,8 @@ func (df *DefaultProcessor) Process(entry *LogEntry) {
 	}
 }
 
+// Initializers for LogProcessor
+//
 func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
 	return &DefaultProcessor { priority: priority, dispatcher: dispatcher }
 }
