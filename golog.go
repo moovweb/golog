@@ -177,7 +177,7 @@ func NewLogger(prefix string) *Logger {
 var logchan chan *LogMsg
 
 const logQueueSize = 512
-func Init() {
+func init() {
 	logchan = make(chan *LogMsg, logQueueSize)
 	go func() {
 		for entry := range(logchan) {
