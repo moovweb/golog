@@ -4,10 +4,6 @@ import "io"
 
 var logchan chan *LogMsg
 
-type LogMsg struct {
-	w io.Writer
-	msg string
-}
 
 const logQueueSize = 512
 func Init() {

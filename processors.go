@@ -14,12 +14,8 @@ type DefaultProcessor struct {
 	dispatcher *LogDispatcher
 }
 
-func NewDefaultProcessor() LogProcessor {
-	console := NewConsoleDispatcher()
-	return &DefaultProcessor { priority: LOG_DEBUG, dispatcher: console }
-}
-
 func (df *DefaultProcessor) SetPriority(p Priority) {
+	p = BoundPriority(p)
 	df.mu.Lock()
 	df.priority = p
 	df.mu.Unlock()
@@ -33,7 +29,26 @@ func (df *DefaultProcessor) GetPriority() Priority {
 
 func (df *DefaultProcessor) Process(entry *LogEntry) {
 	if entry.priority <= df.GetPriority() {
-		df.dispatcher.Send(entry.prefix + entry.msg)
+		msg := entry.priority.String() + ": " + entry.prefix + entry.msg
+		df.dispatcher.Send(msg)
 	}
 }
+
+func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
+	return &DefaultProcessor { priority: priority, dispatcher: dispatcher }
+}
+
+func NewConsoleProcessor(priority Priority) LogProcessor {
+	console := NewConsoleDispatcher()
+	return NewProcessor(priority, console)
+}
+
+func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) {
+	filer, err := NewFileDispatcher(filename)
+	if err != nil {
+		return nil, err
+	}
+	return NewProcessor(priority, filer), nil
+}
+
 

@@ -3,6 +3,8 @@ package golog
 import (
 	"fmt"
 	"time"
+	"strconv"
+	"errors"
 )
 
 // some constants
@@ -21,7 +23,28 @@ const (
 	LOG_DEBUG
 )
 
+func BoundPriority(priority Priority) Priority {
+	if priority < LOG_EMERG {
+		priority = LOG_EMERG
+	} else if priority > LOG_DEBUG {
+		priority = LOG_DEBUG
+	}
+	return priority
+}
 
+func (p Priority) String() string {
+	switch p {
+		case LOG_EMERG: return "EMERGENCY"
+		case LOG_ALERT: return "ALERT"
+		case LOG_CRIT: return "CRITICAL"
+		case LOG_ERR: return "ERROR"
+		case LOG_WARNING: return "WARNING"
+		case LOG_NOTICE: return "NOTICE"
+		case LOG_INFO: return "INFO"
+		case LOG_DEBUG: return "DEBUG"
+	}
+	return "UNKNOWN(" + strconv.Itoa(int(p)) + ")"
+}
 
 type LogEntry struct {
 	prefix string
@@ -35,18 +58,21 @@ type Logger struct {
 	processors map[string]LogProcessor
 }
 
-func (dl *Logger) SetPriority(processorName string, newPriority Priority) {
+func (dl *Logger) SetPriority(processorName string, newPriority Priority) error {
+	newPriority = BoundPriority(newPriority)
 	proc := dl.processors[processorName]
 	if proc != nil {
 		proc.SetPriority(newPriority)
+		return nil
 	}
+	return errors.New("Couldn't find log processor with name '" + processorName + "'")
 }
 
 func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 	dl.processors[name] = processor
 }
 
-func (dl *Logger) LogP(p Priority, prefix string, format string, args ... interface{}) {
+func (dl *Logger) LogP(priority Priority, prefix string, format string, args ... interface{}) {
 	message := fmt.Sprintf(format, args...)
 	if len(message) == 0 ||  message[len(message)-1] != '\n' {
 		message = message + "\n"
@@ -54,7 +80,7 @@ func (dl *Logger) LogP(p Priority, prefix string, format string, args ... interf
 
 	entry := &LogEntry {
 		prefix: prefix,
-		priority: p,
+		priority: BoundPriority(priority),
 		msg: message,
 		created: time.Now(),
 	}
@@ -101,7 +127,7 @@ func (dl *Logger) Emergency(format string, args ... interface{}) {
 }
 
 
-func NewLogger() *Logger {
-	return &Logger { prefix: "", processors: map[string]LogProcessor{} }
+func NewLogger(prefix string) *Logger {
+	return &Logger { prefix: prefix, processors: map[string]LogProcessor{} }
 }
 

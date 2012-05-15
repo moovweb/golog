@@ -45,18 +45,8 @@ type SyslogProcessor struct {
 	dispatcher *LogDispatcher
 }
 
-func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
-	sw, err := unixSyslog()
-	if err != nil {
-		errMsg := fmt.Sprintf("Error in NewSyslogProcessor: %s", err.Error())
-		return nil, errors.New(errMsg)
-	}
-	
-	dsp := NewLogDispatcher(sw)
-	return &SyslogProcessor { facility: f, priority: p, dispatcher: dsp }, nil
-}
-
 func (su *SyslogProcessor) SetPriority(priority Priority) {
+	priority = BoundPriority(priority)
 	su.mu.Lock()
 	su.priority = priority
 	su.mu.Unlock()
@@ -68,13 +58,26 @@ func (su *SyslogProcessor) GetPriority() Priority {
 	return su.priority
 }
 
-const syslogMsgFormat = "<%d>%s: %s"
+const syslogMsgFormat = "<%d>%s %s: %s"
 func (su *SyslogProcessor) Process(entry *LogEntry) {
 	if entry.priority <= su.GetPriority() {
 		key := (int(su.facility) * 8) + int(entry.priority)
+		priorityStr := entry.priority.String()
 		msg := entry.prefix + entry.msg
-		msg = fmt.Sprintf(syslogMsgFormat, key, os.Args[0], msg)
+		msg = fmt.Sprintf(syslogMsgFormat, key, os.Args[0], priorityStr, msg)
 		su.dispatcher.Send(msg)
 	}
 }
+
+func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
+	sw, err := unixSyslog()
+	if err != nil {
+		errMsg := fmt.Sprintf("Error in NewSyslogProcessor: %s", err.Error())
+		return nil, errors.New(errMsg)
+	}
+	
+	dsp := NewLogDispatcher(sw)
+	return &SyslogProcessor { facility: f, priority: p, dispatcher: dsp }, nil
+}
+
 

@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+type LogMsg struct {
+	w io.Writer
+	msg string
+}
+
 type LogDispatcher struct {
 	w io.Writer
 	ch chan *LogMsg
