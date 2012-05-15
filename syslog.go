@@ -4,6 +4,8 @@ import (
 	"net"
 	"os"
 	"fmt"
+	"errors"
+	"time"
 )
 
 type Priority int
@@ -34,10 +36,6 @@ const (
 	LOCAL7
 )
 
-type SyslogWriter struct {
-	conn net.Conn
-}
-
 func connectToSyslog() (sock net.Conn, err error) {
 	logTypes := []string { "unixgram", "unix" }
 	logPaths := []string { "/dev/log", "/var/run/syslog" }
@@ -55,17 +53,30 @@ func connectToSyslog() (sock net.Conn, err error) {
 	
 }
 
-func NewSyslogWriter() (w *SyslogWriter, err error) {
-	sock, err := connectToSyslog()
+type SyslogProcessor struct {
+	priority Priority
+	facility Facility
+	dispatcher *LogDispatcher
+}
+
+func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
+	sw, err := connectToSyslog()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error SyslogWriter: %s\n", err.Error())
-		return nil, err
+		errMsg := fmt.Sprintf("Error in NewSyslogProcessor: %s", err.Error())
+		return nil, errors.New(errMsg)
 	}
-
-	return &SyslogWriter { conn: sock }, nil
+	
+	dsp := NewLogDispatcher(sw)
+	return &SyslogProcessor { facility: f, priority: p, dispatcher: dsp }, nil
 }
 
-func (w *SyslogWriter) Write(b []byte) (int, error) {
-	return w.conn.Write(b)
+const syslogMsgFormat = "<%d>%s %s: %s\n"
+func (su *SyslogProcessor) Process(entry *LogEntry) {
+	if entry.priority <= su.priority {
+		key := (int(su.facility) * 8) + int(entry.priority)
+		timestr := time.Unix(entry.created.Unix(), 0).UTC().Format(time.RFC3339)
+		prefix := entry.prefix
+		msg := fmt.Sprintf(syslogMsgFormat, key, timestr, prefix, entry.msg)
+		su.dispatcher.Send(msg)
+	}
 }
-

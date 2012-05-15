@@ -12,56 +12,67 @@ type LogEntry struct {
 	created time.Time //time.Now()
 }
 
-type Logger interface {
-	Logf(Priority, string, ... interface{})
-	Debugf(string, ... interface{})
-	Infof(string, ... interface{})
-	Noticef(string, ... interface{})
-	Warningf(string, ... interface{})
-	Errorf(string, ... interface{})
-	Criticalf(string, ... interface{})
-	Alertf(string, ... interface{})
-	Emergencyf(string, ... interface{})
+type Logger struct {
+	prefix string
+	processors map[string]LogProcessor
 }
 
-type PrintLogger struct {}
-
-func NewDefaultLogger() Logger {
-	return &PrintLogger{}
+func NewLogger() *Logger {
+	return &Logger { prefix: "", processors: map[string]LogProcessor{} }
 }
 
-func (pl *PrintLogger) Logf(p Priority, format string, args ... interface{}) {
-	fmt.Printf(format, args)
+
+func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
+	dl.processors[name] = processor
 }
 
-func (pl *PrintLogger) Debugf(format string, args ... interface{}) {
-	pl.Logf(LOG_DEBUG, format, args)
+func (dl *Logger) LogP(p Priority, prefix string, format string, args ... interface{}) {
+	message := fmt.Sprintf(format, args...)
+	entry := &LogEntry {
+		prefix: prefix,
+		priority: p,
+		msg: message,
+		created: time.Now(),
+	}
+
+	for _, p := range dl.processors {
+		p.Process(entry)
+	}
 }
 
-func (pl *PrintLogger) Infof(format string, args ... interface{}) {
-	pl.Logf(LOG_INFO, format, args)
+func (dl *Logger) Log(p Priority, format string, args ... interface{}) {
+	dl.LogP(p, dl.prefix, format, args...)
 }
 
-func (pl *PrintLogger) Noticef(format string, args ... interface{}) {
-	pl.Logf(LOG_NOTICE, format, args)
+func (dl *Logger) Debug(format string, args ... interface{}) {
+	dl.Log(LOG_DEBUG, format, args)
 }
 
-func (pl *PrintLogger) Warningf(format string, args ... interface{}) {
-	pl.Logf(LOG_WARNING, format, args)
+func (dl *Logger) Info(format string, args ... interface{}) {
+	dl.Log(LOG_INFO, format, args)
 }
 
-func (pl *PrintLogger) Errorf(format string, args ... interface{}) {
-	pl.Logf(LOG_ERR, format, args)
+func (dl *Logger) Notice(format string, args ... interface{}) {
+	dl.Log(LOG_NOTICE, format, args)
 }
 
-func (pl *PrintLogger) Criticalf(format string, args ... interface{}) {
-	pl.Logf(LOG_CRIT, format, args)
+func (dl *Logger) Warning(format string, args ... interface{}) {
+	dl.Log(LOG_WARNING, format, args)
 }
 
-func (pl *PrintLogger) Alertf(format string, args ... interface{}) {
-	pl.Logf(LOG_ALERT, format, args)
+func (dl *Logger) Error(format string, args ... interface{}) {
+	dl.Log(LOG_ERR, format, args)
 }
 
-func (pl *PrintLogger) Emergencyf(format string, args ... interface{}) {
-	pl.Logf(LOG_EMERG, format, args)
+func (dl *Logger) Critical(format string, args ... interface{}) {
+	dl.Log(LOG_CRIT, format, args)
 }
+
+func (dl *Logger) Alert(format string, args ... interface{}) {
+	dl.Log(LOG_ALERT, format, args)
+}
+
+func (dl *Logger) Emergency(format string, args ... interface{}) {
+	dl.Log(LOG_EMERG, format, args)
+}
+
