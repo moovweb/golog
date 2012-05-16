@@ -36,7 +36,13 @@ func unixSyslog() (sock net.Conn, err error) {
 		}
 	}
 	return nil, err
+}
 
+func DialSyslog(network, raddr string) (sock net.Conn, err error) {
+	if network == "" {
+		return unixSyslog()
+	}
+	return net.Dial(network, raddr)
 }
 
 // ****************************************************************************
@@ -69,7 +75,7 @@ func (su *SyslogProcessor) Process(entry *LogEntry) {
 // Initializer for the SyslogProcessor
 //
 func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
-	sw, err := unixSyslog()
+	sw, err := DialSyslog("","")
 	if err != nil {
 		errMsg := fmt.Sprintf("Error in NewSyslogProcessor: %s", err.Error())
 		return nil, errors.New(errMsg)
