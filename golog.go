@@ -26,10 +26,12 @@ import (
 type Priority int
 
 const (
+	log_DISABLE Priority = iota - 1
+
 	// Using syslog standard priorities.
 	// From /usr/include/sys/syslog.h.
 	// These are the same on Linux, BSD, and OS X.
-	LOG_EMERG Priority = iota
+	LOG_EMERG
 	LOG_ALERT
 	LOG_CRIT
 	LOG_ERR
@@ -38,7 +40,6 @@ const (
 	LOG_INFO
 	LOG_DEBUG
 )
-const log_DISABLE Priority = -1
 
 // If a priority is out of bounds given any input, we'll simply
 // truncate it to the closest valid priority.
@@ -69,8 +70,32 @@ func (p Priority) String() string {
 		return "INFO"
 	case LOG_DEBUG:
 		return "DEBUG"
+	case log_DISABLE:
+		return "DISABLED"
 	}
 	return "UNKNOWN(" + strconv.Itoa(int(p)) + ")"
+}
+
+func ParsePriority(p string) Priority {
+	switch {
+		case LOG_EMERG.String() == p:
+			return LOG_EMERG
+		case LOG_ALERT.String() == p:
+			return LOG_ALERT
+		case LOG_CRIT.String() == p:
+			return LOG_CRIT
+		case LOG_ERR.String() == p:
+			return LOG_ERR
+		case LOG_WARNING.String() == p:
+			return LOG_WARNING
+		case LOG_NOTICE.String() == p:
+			return LOG_NOTICE
+		case LOG_INFO.String() == p:
+			return LOG_INFO
+		case LOG_DEBUG.String() == p:
+			return LOG_DEBUG
+	}
+	return log_DISABLE
 }
 
 // ****************************************************************************
