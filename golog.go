@@ -38,12 +38,13 @@ const (
 	LOG_INFO
 	LOG_DEBUG
 )
+const log_DISABLE Priority = -1
 
 // If a priority is out of bounds given any input, we'll simply
 // truncate it to the closest valid priority.
 func BoundPriority(priority Priority) Priority {
-	if priority < LOG_EMERG {
-		priority = LOG_EMERG
+	if priority < log_DISABLE {
+		priority = log_DISABLE
 	} else if priority > LOG_DEBUG {
 		priority = LOG_DEBUG
 	}
@@ -127,6 +128,10 @@ func (dl *Logger) GetPriorities() map[string]Priority {
 // simply override the old processor with the same name with the new one.
 func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 	dl.processors[name] = processor
+}
+
+func (dl *Logger) DisableProcessor(name string) {
+	dl.processors[name].SetPriority(log_DISABLE)
 }
 
 // Begin Logging interface.  The following methods are used for logging
