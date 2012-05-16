@@ -74,8 +74,8 @@ func (su *SyslogProcessor) Process(entry *LogEntry) {
 
 // Initializer for the SyslogProcessor
 //
-func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
-	sw, err := DialSyslog("","")
+func NewSyslogProcessorAt(network, addy string, f Facility, p Priority) (LogProcessor, error) {
+	sw, err := DialSyslog(network, addy)
 	if err != nil {
 		errMsg := fmt.Sprintf("Error in NewSyslogProcessor: %s", err.Error())
 		return nil, errors.New(errMsg)
@@ -83,5 +83,9 @@ func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
 
 	dsp := NewLogDispatcher(sw)
 	defaultProcessor := NewProcessor(p, dsp).(*DefaultProcessor)
-	return &SyslogProcessor{DefaultProcessor: defaultProcessor, facility: f}, nil
+	return &SyslogProcessor{ DefaultProcessor: defaultProcessor, facility: f }, nil
+}
+
+func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
+	return NewSyslogProcessorAt("", "", f, p)
 }
