@@ -51,6 +51,29 @@ func BoundPriority(priority Priority) Priority {
 	return priority
 }
 
+func Str2Priority(pstr string) Priority {
+	switch pstr {
+	case "EMERGENCY":
+		return LOG_EMERG
+	case "ALERT":
+		return LOG_ALERT
+	case "CRITICAL":
+		return LOG_CRIT
+	case "ERROR":
+		return LOG_ERR
+	case "WARNING":
+		return LOG_WARNING
+	case "NOTICE":
+		return LOG_NOTICE
+	case "INFO":
+		return LOG_INFO
+	case "DEBUG":
+		return LOG_DEBUG
+	default:
+	}
+	return log_DISABLE
+}
+
 func (p Priority) String() string {
 	switch p {
 	case LOG_EMERG:
