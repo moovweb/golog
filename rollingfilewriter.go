@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"os"
 )
 
 type rollingTypes uint8
@@ -150,7 +151,7 @@ func (rollfileWriter *rollingFileWriter) createFile() error {
 			return err
 		}
 
-		err = fileSystemWrapper.Rename(rollfileWriter.currentFilePath, filepath.Join(rollfileWriter.fileDir, nextRollName))
+		err = os.Rename(rollfileWriter.currentFilePath, filepath.Join(rollfileWriter.fileDir, nextRollName))
 		if err != nil {
 			return err
 		}
@@ -182,7 +183,7 @@ func (rollfileWriter *rollingFileWriter) getNextRollName() (string, error) {
 }
 
 func (rollfileWriter *rollingFileWriter) getRolls() (map[int]string, error) {
-	files, err := fileSystemWrapper.GetFileNames(rollfileWriter.fileDir)
+	files, err := getFileNames(rollfileWriter.fileDir)
 
 	if err != nil {
 		return map[int]string{}, err
@@ -226,7 +227,7 @@ func (rollfileWriter *rollingFileWriter) deleteOldRolls() error {
 
 	sortedRolls := rollfileWriter.sortRollsByIndex(rolls)
 	for i := 0; i < rollsToDelete; i++ {
-		err := fileSystemWrapper.Remove(filepath.Join(rollfileWriter.fileDir, sortedRolls[i]))
+		err := os.Remove(filepath.Join(rollfileWriter.fileDir, sortedRolls[i]))
 		if err != nil {
 			return err
 		}
@@ -270,7 +271,7 @@ func (rollfileWriter *rollingFileWriter) Write(bytes []byte) (n int, err error) 
 }
 
 func (rollfileWriter *rollingFileWriter) createFileAndFolderIfNeeded() error {
-	err := fileSystemWrapper.MkdirAll(rollfileWriter.fileDir)
+	err := os.MkdirAll(rollfileWriter.fileDir, defaultDirPerms)
 	if err != nil {
 		return err
 	}
@@ -283,15 +284,15 @@ func (rollfileWriter *rollingFileWriter) createFileAndFolderIfNeeded() error {
 	filePath := filepath.Join(rollfileWriter.fileDir, fileName)
 
 	var innerWriter io.WriteCloser
-	if fileSystemWrapper.Exists(filePath) {
-		innerWriter, err = fileSystemWrapper.Open(filePath)
-		size, err := fileSystemWrapper.GetFileSize(filePath)
+	if _, err := os.Lstat(filePath); err == nil {  // file path exists?
+		innerWriter, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND, defaultFilePerms)
+		stat, err := os.Lstat(filePath)
 		if err != nil {
 			return err
 		}
-		rollfileWriter.currentFileSize = size
+		rollfileWriter.currentFileSize = stat.Size()
 	} else {
-		innerWriter, err = fileSystemWrapper.Create(filePath)
+		innerWriter, err = os.Create(filePath)
 		rollfileWriter.currentFileSize = 0
 	}
 	if err != nil {

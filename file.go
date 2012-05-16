@@ -8,9 +8,32 @@ package golog
 import "io"
 import "os"
 
-const filePerms = 0644 // rw user, r everyone else
+const (
+	defaultFilePerms = 644
+	defaultDirPerms = 775
+)
+
+func getFileNames(folderPath string) ([]string, error) {
+	if folderPath == "" {
+		folderPath = "."
+	}
+
+	folder, err := os.Open(folderPath)
+	if err != nil {
+		return make([]string, 0), err
+	}
+	defer folder.Close()
+
+	files, err := folder.Readdirnames(-1)
+	if err != nil {
+		return make([]string, 0), err
+	}
+	return files, nil
+}
+
+
 func openFile(filename string) (io.Writer, error) {
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerms)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, defaultFilePerms)
 	if err != nil {
 		return nil, err
 	}
@@ -25,10 +48,9 @@ func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) 
 	filer := NewLogDispatcher(w)
 	return NewProcessor(priority, filer), nil
 }
-/**
-const maxRolls = 32
 
-func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize int64) (LogProcessor, error) {
+
+func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize int64, maxRolls int) (LogProcessor, error) {
 	w, err := newRollingFileWriterSize(filename, maxSize, maxRolls)
 	if err != nil {
 		return nil, err
@@ -36,4 +58,12 @@ func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize i
 	filer := NewLogDispatcher(w)
 	return NewProcessor(priority, filer), nil
 }
-**/
+
+func NewRollingFileByDateProcessor(priority Priority, filename string, datePattern string) (LogProcessor, error) {
+	w, err := newRollingFileWriterDate(filename, datePattern)
+	if err != nil {
+		return nil, err
+	}
+	filer := NewLogDispatcher(w)
+	return NewProcessor(priority, filer), nil
+}
