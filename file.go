@@ -6,6 +6,7 @@
 package golog
 
 import "io"
+import "os"
 
 const filePerms = 0644 // rw user, r everyone else
 func openFile(filename string) (io.Writer, error) {
@@ -17,14 +18,14 @@ func openFile(filename string) (io.Writer, error) {
 }
 
 func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) {
-	w, err := OpenFile(filename)
+	w, err := openFile(filename)
 	if err != nil {
 		return nil, err
 	}
 	filer := NewLogDispatcher(w)
 	return NewProcessor(priority, filer), nil
 }
-
+/**
 const maxRolls = 32
 
 func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize int64) (LogProcessor, error) {
@@ -35,3 +36,4 @@ func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize i
 	filer := NewLogDispatcher(w)
 	return NewProcessor(priority, filer), nil
 }
+**/

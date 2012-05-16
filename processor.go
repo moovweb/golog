@@ -20,9 +20,9 @@ type LogProcessor interface {
 }
 
 type DefaultProcessor struct {
-	mu sync.RWMutex							// Read/Write Lock used to protect the priority.
-	priority Priority						// Messages need to be at least this important to get through.
-	dispatcher *LogDispatcher		// Dispatcher used to send messages to the channel
+	mu         sync.RWMutex   // Read/Write Lock used to protect the priority.
+	priority   Priority       // Messages need to be at least this important to get through.
+	Dispatcher *LogDispatcher // Dispatcher used to send messages to the channel
 }
 
 // Atomically set the new priority.  All accesses to priority need to be
@@ -43,13 +43,12 @@ func (df *DefaultProcessor) GetPriority() Priority {
 func (df *DefaultProcessor) Process(entry *LogEntry) {
 	if entry.priority <= df.GetPriority() {
 		msg := entry.priority.String() + ": " + entry.prefix + entry.msg
-		df.dispatcher.Send(msg)
+		df.Dispatcher.Send(msg)
 	}
 }
 
 // Initializers for LogProcessor
 //
 func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
-	return &DefaultProcessor { priority: priority, dispatcher: dispatcher }
+	return &DefaultProcessor{priority: priority, Dispatcher: dispatcher}
 }
-

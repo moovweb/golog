@@ -1,11 +1,10 @@
 package golog
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"os"
-	"fmt"
-	"errors"
-	"sync"
 )
 
 // Syslog facilities to log to.  We only list the LOCAL set as others
@@ -25,9 +24,9 @@ const (
 
 // Create a socket connection to the syslog
 func unixSyslog() (sock net.Conn, err error) {
-	logTypes := []string { "unixgram", "unix" }
-	logPaths := []string { "/dev/log", "/var/run/syslog" }
-	
+	logTypes := []string{"unixgram", "unix"}
+	logPaths := []string{"/dev/log", "/var/run/syslog"}
+
 	for _, network := range logTypes {
 		for _, path := range logPaths {
 			sock, err = net.Dial(network, path)
@@ -37,7 +36,7 @@ func unixSyslog() (sock net.Conn, err error) {
 		}
 	}
 	return nil, err
-	
+
 }
 
 // ****************************************************************************
@@ -47,25 +46,8 @@ func unixSyslog() (sock net.Conn, err error) {
 // multiple sysloggers logging to different facilities.
 //
 type SyslogProcessor struct {
-	mu sync.RWMutex
-	priority Priority
+	*DefaultProcessor
 	facility Facility
-	dispatcher *LogDispatcher
-}
-
-// Atomically set the priority to the given value (adjusting for out of bounds)
-func (su *SyslogProcessor) SetPriority(priority Priority) {
-	priority = BoundPriority(priority)
-	su.mu.Lock()
-	su.priority = priority
-	su.mu.Unlock()
-}
-
-// Get the priority via the protected read locks
-func (su *SyslogProcessor) GetPriority() Priority {
-	su.mu.RLock()
-	defer su.mu.RUnlock()
-	return su.priority
 }
 
 // Not only do we filter out messages whose priority is not high enough
@@ -73,13 +55,14 @@ func (su *SyslogProcessor) GetPriority() Priority {
 // special way using the priority and facility in a way that syslog 
 // understand.
 const syslogMsgFormat = "<%d>%s %s: %s"
+
 func (su *SyslogProcessor) Process(entry *LogEntry) {
 	if entry.priority <= su.GetPriority() {
 		key := (int(su.facility) * 8) + int(entry.priority)
 		priorityStr := entry.priority.String()
 		msg := entry.prefix + entry.msg
 		msg = fmt.Sprintf(syslogMsgFormat, key, os.Args[0], priorityStr, msg)
-		su.dispatcher.Send(msg)
+		su.Dispatcher.Send(msg)
 	}
 }
 
@@ -91,8 +74,8 @@ func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
 		errMsg := fmt.Sprintf("Error in NewSyslogProcessor: %s", err.Error())
 		return nil, errors.New(errMsg)
 	}
-	
-	dsp := NewLogDispatcher(sw)
-	return &SyslogProcessor { facility: f, priority: p, dispatcher: dsp }, nil
-}
 
+	dsp := NewLogDispatcher(sw)
+	defaultProcessor := NewProcessor(p, dsp).(*DefaultProcessor)
+	return &SyslogProcessor{DefaultProcessor: defaultProcessor, facility: f}, nil
+}
