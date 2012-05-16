@@ -89,10 +89,10 @@ type Logger struct {
 
 // Storage object used to pass the log data over to the Processor.
 type LogEntry struct {
-	prefix   string    // Prefix to prepend to the log message.
-	priority Priority  // Priority of the log message.
-	msg      string    // The actual message payload
-	created  time.Time // Time this message was created.
+	Prefix   string    // Prefix to prepend to the log message.
+	Priority Priority  // Priority of the log message.
+	Msg      string    // The actual message payload
+	Created  time.Time // Time this message was created.
 }
 
 // Set/Get the priority of the Processor with the given name.
@@ -127,6 +127,9 @@ func (dl *Logger) GetPriorities() map[string]Priority {
 // unique against all other processors.  If a name conflict arises, we
 // simply override the old processor with the same name with the new one.
 func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
+	if p := dl.processors[name]; p != nil {
+		p.Close()
+	}
 	dl.processors[name] = processor
 }
 
@@ -144,10 +147,10 @@ func (dl *Logger) LogP(priority Priority, prefix string, format string, args ...
 	}
 
 	entry := &LogEntry{
-		prefix:   prefix,
-		priority: BoundPriority(priority),
-		msg:      message,
-		created:  time.Now(),
+		Prefix:   prefix,
+		Priority: BoundPriority(priority),
+		Msg:      message,
+		Created:  time.Now(),
 	}
 
 	for _, p := range dl.processors {
