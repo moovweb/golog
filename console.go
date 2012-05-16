@@ -1,3 +1,5 @@
+// Log Processor for outputting into the console.
+//
 package golog
 
 import "os"
