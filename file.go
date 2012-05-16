@@ -16,9 +16,19 @@ func openFile(filename string) (io.Writer, error) {
 	return f, nil
 }
 
-
 func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) {
-	w, err := openFile(filename)	
+	w, err := OpenFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	filer := NewLogDispatcher(w)
+	return NewProcessor(priority, filer), nil
+}
+
+const maxRolls = 32
+
+func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize int64) (LogProcessor, error) {
+	w, err := newRollingFileWriterSize(filename, maxSize, maxRolls)
 	if err != nil {
 		return nil, err
 	}
