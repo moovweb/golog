@@ -57,10 +57,10 @@ type SyslogProcessor struct {
 const syslogMsgFormat = "<%d>%s %s: %s"
 
 func (su *SyslogProcessor) Process(entry *LogEntry) {
-	if entry.priority <= su.GetPriority() {
-		key := (int(su.facility) * 8) + int(entry.priority)
-		priorityStr := entry.priority.String()
-		msg := entry.prefix + entry.msg
+	if entry.Priority <= su.GetPriority() {
+		key := (int(su.facility) * 8) + int(entry.Priority)
+		priorityStr := entry.Priority.String()
+		msg := entry.Prefix + entry.Msg
 		msg = fmt.Sprintf(syslogMsgFormat, key, os.Args[0], priorityStr, msg)
 		su.Dispatcher.Send(msg)
 	}

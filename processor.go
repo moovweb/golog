@@ -17,6 +17,7 @@ type LogProcessor interface {
 	GetPriority() Priority
 	SetPriority(Priority)
 	Process(*LogEntry)
+	Close()
 }
 
 type DefaultProcessor struct {
@@ -41,10 +42,13 @@ func (df *DefaultProcessor) GetPriority() Priority {
 }
 
 func (df *DefaultProcessor) Process(entry *LogEntry) {
-	if entry.priority <= df.GetPriority() {
-		msg := entry.priority.String() + ": " + entry.prefix + entry.msg
+	if entry.Priority <= df.GetPriority() {
+		msg := entry.Priority.String() + ": " + entry.Prefix + entry.Msg
 		df.Dispatcher.Send(msg)
 	}
+}
+
+func (df *DefaultProcessor) Close() {
 }
 
 // Initializers for LogProcessor
