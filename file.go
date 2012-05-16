@@ -6,6 +6,7 @@
 package golog
 
 import "io"
+import "os"
 
 const filePerms = 0644 // rw user, r everyone else
 func openFile(filename string) (io.Writer, error) {
@@ -16,9 +17,8 @@ func openFile(filename string) (io.Writer, error) {
 	return f, nil
 }
 
-
 func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) {
-	w, err := openFile(filename)	
+	w, err := openFile(filename)
 	if err != nil {
 		return nil, err
 	}

@@ -13,11 +13,11 @@
 package golog
 
 import (
-	"io"
-	"fmt"
-	"time"
 	"errors"
+	"fmt"
+	"io"
 	"strconv"
+	"time"
 )
 
 // ****************************************************************************
@@ -52,18 +52,25 @@ func BoundPriority(priority Priority) Priority {
 
 func (p Priority) String() string {
 	switch p {
-		case LOG_EMERG: return "EMERGENCY"
-		case LOG_ALERT: return "ALERT"
-		case LOG_CRIT: return "CRITICAL"
-		case LOG_ERR: return "ERROR"
-		case LOG_WARNING: return "WARNING"
-		case LOG_NOTICE: return "NOTICE"
-		case LOG_INFO: return "INFO"
-		case LOG_DEBUG: return "DEBUG"
+	case LOG_EMERG:
+		return "EMERGENCY"
+	case LOG_ALERT:
+		return "ALERT"
+	case LOG_CRIT:
+		return "CRITICAL"
+	case LOG_ERR:
+		return "ERROR"
+	case LOG_WARNING:
+		return "WARNING"
+	case LOG_NOTICE:
+		return "NOTICE"
+	case LOG_INFO:
+		return "INFO"
+	case LOG_DEBUG:
+		return "DEBUG"
 	}
 	return "UNKNOWN(" + strconv.Itoa(int(p)) + ")"
 }
-
 
 // ****************************************************************************
 // The actual Logger structure, methods, and components.
@@ -75,16 +82,16 @@ func (p Priority) String() string {
 //
 type Logger struct {
 	// prefix used to prepend to logs if no other prefix is supplied.
-	prefix string
+	prefix     string
 	processors map[string]LogProcessor
 }
 
 // Storage object used to pass the log data over to the Processor.
 type LogEntry struct {
-	prefix string				// Prefix to prepend to the log message.
-	priority Priority		// Priority of the log message.
-	msg string					// The actual message payload
-	created time.Time		// Time this message was created.
+	prefix   string    // Prefix to prepend to the log message.
+	priority Priority  // Priority of the log message.
+	msg      string    // The actual message payload
+	created  time.Time // Time this message was created.
 }
 
 // Set/Get the priority of the Processor with the given name.
@@ -104,12 +111,12 @@ func (dl *Logger) GetPriority(procName string) (Priority, error) {
 	if proc != nil {
 		return proc.GetPriority(), nil
 	}
-	return Priority(0), errors.New("Coudln't find log processor with name '" + procName + "'")
+	return LOG_EMERG, errors.New("Coudln't find log processor with name '" + procName + "'")
 }
 
 func (dl *Logger) GetPriorities() map[string]Priority {
 	pmap := map[string]Priority{}
-	for name, proc := range(dl.processors) {
+	for name, proc := range dl.processors {
 		pmap[name] = proc.GetPriority()
 	}
 	return pmap
@@ -122,21 +129,20 @@ func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 	dl.processors[name] = processor
 }
 
-
 // Begin Logging interface.  The following methods are used for logging
 // messages to whatever processors this logger is associated with.
 //
-func (dl *Logger) LogP(priority Priority, prefix string, format string, args ... interface{}) {
+func (dl *Logger) LogP(priority Priority, prefix string, format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
-	if len(message) == 0 ||  message[len(message)-1] != '\n' {
+	if len(message) == 0 || message[len(message)-1] != '\n' {
 		message = message + "\n"
 	}
 
-	entry := &LogEntry {
-		prefix: prefix,
+	entry := &LogEntry{
+		prefix:   prefix,
 		priority: BoundPriority(priority),
-		msg: message,
-		created: time.Now(),
+		msg:      message,
+		created:  time.Now(),
 	}
 
 	for _, p := range dl.processors {
@@ -144,39 +150,39 @@ func (dl *Logger) LogP(priority Priority, prefix string, format string, args ...
 	}
 }
 
-func (dl *Logger) Log(p Priority, format string, args ... interface{}) {
+func (dl *Logger) Log(p Priority, format string, args ...interface{}) {
 	dl.LogP(p, dl.prefix, format, args...)
 }
 
-func (dl *Logger) Debug(format string, args ... interface{}) {
+func (dl *Logger) Debug(format string, args ...interface{}) {
 	dl.Log(LOG_DEBUG, format, args...)
 }
 
-func (dl *Logger) Info(format string, args ... interface{}) {
+func (dl *Logger) Info(format string, args ...interface{}) {
 	dl.Log(LOG_INFO, format, args...)
 }
 
-func (dl *Logger) Notice(format string, args ... interface{}) {
+func (dl *Logger) Notice(format string, args ...interface{}) {
 	dl.Log(LOG_NOTICE, format, args...)
 }
 
-func (dl *Logger) Warning(format string, args ... interface{}) {
+func (dl *Logger) Warning(format string, args ...interface{}) {
 	dl.Log(LOG_WARNING, format, args...)
 }
 
-func (dl *Logger) Error(format string, args ... interface{}) {
+func (dl *Logger) Error(format string, args ...interface{}) {
 	dl.Log(LOG_ERR, format, args...)
 }
 
-func (dl *Logger) Critical(format string, args ... interface{}) {
+func (dl *Logger) Critical(format string, args ...interface{}) {
 	dl.Log(LOG_CRIT, format, args...)
 }
 
-func (dl *Logger) Alert(format string, args ... interface{}) {
+func (dl *Logger) Alert(format string, args ...interface{}) {
 	dl.Log(LOG_ALERT, format, args...)
 }
 
-func (dl *Logger) Emergency(format string, args ... interface{}) {
+func (dl *Logger) Emergency(format string, args ...interface{}) {
 	dl.Log(LOG_EMERG, format, args...)
 }
 
@@ -186,9 +192,8 @@ func (dl *Logger) Emergency(format string, args ... interface{}) {
 // parameter will be used instead.
 //
 func NewLogger(prefix string) *Logger {
-	return &Logger { prefix: prefix, processors: map[string]LogProcessor{} }
+	return &Logger{prefix: prefix, processors: map[string]LogProcessor{}}
 }
-
 
 // ****************************************************************************
 // The following section covers the part of the Logger which listens to the
@@ -199,13 +204,12 @@ func NewLogger(prefix string) *Logger {
 var logchan chan *LogMsg
 
 const logQueueSize = 512
+
 func init() {
 	logchan = make(chan *LogMsg, logQueueSize)
 	go func() {
-		for entry := range(logchan) {
+		for entry := range logchan {
 			io.WriteString(entry.w, entry.msg)
 		}
 	}()
 }
-
-
