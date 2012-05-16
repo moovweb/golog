@@ -53,17 +53,3 @@ func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
 	return &DefaultProcessor { priority: priority, dispatcher: dispatcher }
 }
 
-func NewConsoleProcessor(priority Priority) LogProcessor {
-	console := NewConsoleDispatcher()
-	return NewProcessor(priority, console)
-}
-
-func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) {
-	filer, err := NewFileDispatcher(filename)
-	if err != nil {
-		return nil, err
-	}
-	return NewProcessor(priority, filer), nil
-}
-
-

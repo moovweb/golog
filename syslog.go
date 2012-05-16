@@ -96,4 +96,3 @@ func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {
 	return &SyslogProcessor { facility: f, priority: p, dispatcher: dsp }, nil
 }
 
-
