@@ -23,7 +23,7 @@ const (
 )
 
 func SyslogFacilities() []Facility {
-	return []Facility {
+	return []Facility{
 		LOCAL0,
 		LOCAL1,
 		LOCAL2,
@@ -31,7 +31,7 @@ func SyslogFacilities() []Facility {
 		LOCAL4,
 		LOCAL5,
 		LOCAL6,
-		LOCAL7 }
+		LOCAL7}
 }
 
 // Create a socket connection to the syslog
@@ -95,7 +95,7 @@ func NewSyslogProcessorAt(network, addy string, f Facility, p Priority) (LogProc
 
 	dsp := NewLogDispatcher(sw)
 	defaultProcessor := NewProcessor(p, dsp).(*DefaultProcessor)
-	return &SyslogProcessor{ DefaultProcessor: defaultProcessor, facility: f }, nil
+	return &SyslogProcessor{DefaultProcessor: defaultProcessor, facility: f}, nil
 }
 
 func NewSyslogProcessor(f Facility, p Priority) (LogProcessor, error) {

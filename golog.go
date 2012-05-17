@@ -42,7 +42,7 @@ const (
 )
 
 func Priorities() []Priority {
-	return []Priority {
+	return []Priority{
 		LOG_EMERG,
 		LOG_ALERT,
 		LOG_CRIT,
@@ -50,7 +50,7 @@ func Priorities() []Priority {
 		LOG_WARNING,
 		LOG_NOTICE,
 		LOG_INFO,
-		LOG_DEBUG }
+		LOG_DEBUG}
 }
 
 // If a priority is out of bounds given any input, we'll simply
@@ -113,22 +113,22 @@ func (p Priority) String() string {
 
 func ParsePriority(p string) Priority {
 	switch {
-		case LOG_EMERG.String() == p:
-			return LOG_EMERG
-		case LOG_ALERT.String() == p:
-			return LOG_ALERT
-		case LOG_CRIT.String() == p:
-			return LOG_CRIT
-		case LOG_ERR.String() == p:
-			return LOG_ERR
-		case LOG_WARNING.String() == p:
-			return LOG_WARNING
-		case LOG_NOTICE.String() == p:
-			return LOG_NOTICE
-		case LOG_INFO.String() == p:
-			return LOG_INFO
-		case LOG_DEBUG.String() == p:
-			return LOG_DEBUG
+	case LOG_EMERG.String() == p:
+		return LOG_EMERG
+	case LOG_ALERT.String() == p:
+		return LOG_ALERT
+	case LOG_CRIT.String() == p:
+		return LOG_CRIT
+	case LOG_ERR.String() == p:
+		return LOG_ERR
+	case LOG_WARNING.String() == p:
+		return LOG_WARNING
+	case LOG_NOTICE.String() == p:
+		return LOG_NOTICE
+	case LOG_INFO.String() == p:
+		return LOG_INFO
+	case LOG_DEBUG.String() == p:
+		return LOG_DEBUG
 	}
 	return log_DISABLE
 }

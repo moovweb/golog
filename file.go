@@ -46,4 +46,3 @@ func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) 
 	}
 	return NewProcessorFromWriter(priority, w), nil
 }
-

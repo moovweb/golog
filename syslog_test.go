@@ -1,21 +1,21 @@
 package golog
 
 import (
+	"net"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
 	"testing"
 	"time"
-	"net"
-	"strings"
-	"strconv"
-	"sync"
-	"sort"
 )
 
 func checkOutput(result string, f Facility, p Priority, prefix, msg string, t *testing.T) {
-	expectedStart := "<" + strconv.Itoa(int(f) * 8 + int(p)) + ">"
+	expectedStart := "<" + strconv.Itoa(int(f)*8+int(p)) + ">"
 	expectedEnd := p.String() + ": " + prefix + msg
 	if !strings.HasPrefix(result, expectedStart) || !strings.HasSuffix(result, expectedEnd) {
 		errmsg := "Failed log consistency check:\nExpected '%s'\nResult   '%s'"
-		t.Errorf(errmsg, expectedStart + " ... " + expectedEnd, result)
+		t.Errorf(errmsg, expectedStart+" ... "+expectedEnd, result)
 	}
 }
 
@@ -24,7 +24,9 @@ func runSyslogReader(c net.PacketConn, msgChan chan<- string) {
 	var rcvd string = ""
 	for {
 		n, _, err := c.ReadFrom(buf[0:])
-		if err != nil || n == 0 { break }
+		if err != nil || n == 0 {
+			break
+		}
 		rcvd += string(buf[0:n])
 	}
 
@@ -32,7 +34,7 @@ func runSyslogReader(c net.PacketConn, msgChan chan<- string) {
 	c.Close()
 }
 
-func startServer(msgChan chan<- string) (serverAddr string, err error){
+func startServer(msgChan chan<- string) (serverAddr string, err error) {
 	c, e := net.ListenPacket("udp", "127.0.0.1:0")
 	if e != nil {
 		return "", e
@@ -92,10 +94,10 @@ func checkSyslogPost(f Facility, p Priority, t *testing.T) {
 	message := "Testing."
 
 	logger := createSyslogger(servAddy, prefix, f, minPriority, t)
-	
+
 	logger.Log(p, message)
 	rcvd := <-msgChan
-	checkOutput(rcvd, f, p, prefix, message + "\n", t)
+	checkOutput(rcvd, f, p, prefix, message+"\n", t)
 
 	closeSyslog(logger)
 }
@@ -105,8 +107,8 @@ func TestSingleLogWrite(t *testing.T) {
 }
 
 func TestMultipleLogWrites(t *testing.T) {
-	for f := range(SyslogFacilities()) {
-		for p := range(Priorities()) {
+	for f := range SyslogFacilities() {
+		for p := range Priorities() {
 			checkSyslogPost(Facility(f), Priority(p), t)
 		}
 	}
@@ -122,7 +124,7 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 	prefix := "syslog_conc_test: "
 	facility := LOCAL0
 	minPriority := LOG_DEBUG
-	
+
 	logger := createSyslogger(servAddy, prefix, facility, minPriority, t)
 
 	total_routines := 5000
@@ -133,11 +135,11 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 		go func() {
 			logger.Info("Testing routine %08d", tmp)
 			wg.Done()
-			println ("finished: " + strconv.Itoa(tmp))
+			println("finished: " + strconv.Itoa(tmp))
 		}()
 	}
 	wg.Wait()
-	
+
 	logs := <-msgChan
 	log_lines := strings.Split(strings.TrimSpace(logs), "\n")
 	sort.Strings(log_lines)
@@ -146,6 +148,3 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 		t.Fatalf(errmsg, total_routines, len(log_lines))
 	}
 }
-
-
-
