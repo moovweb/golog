@@ -10,7 +10,7 @@ import "os"
 
 const (
 	defaultFilePerms = 644
-	defaultDirPerms = 775
+	defaultDirPerms  = 775
 )
 
 func getFileNames(folderPath string) ([]string, error) {
@@ -31,7 +31,6 @@ func getFileNames(folderPath string) ([]string, error) {
 	return files, nil
 }
 
-
 func openFile(filename string) (io.Writer, error) {
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, defaultFilePerms)
 	if err != nil {
@@ -48,7 +47,6 @@ func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) 
 	filer := NewLogDispatcher(w)
 	return NewProcessor(priority, filer), nil
 }
-
 
 func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize int64, maxRolls int) (LogProcessor, error) {
 	w, err := newRollingFileWriterSize(filename, maxSize, maxRolls)
