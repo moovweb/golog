@@ -31,7 +31,7 @@ func getFileNames(folderPath string) ([]string, error) {
 	return files, nil
 }
 
-func openFile(filename string) (io.Writer, error) {
+func openFile(filename string) (io.WriteCloser, error) {
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, defaultFilePerms)
 	if err != nil {
 		return nil, err

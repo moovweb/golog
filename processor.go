@@ -20,7 +20,7 @@ type LogProcessor interface {
 	GetPriority() Priority
 	SetPriority(Priority)
 	Process(*LogEntry)
-	Close()
+	Close() error
 }
 
 type DefaultProcessor struct {
@@ -51,7 +51,8 @@ func (df *DefaultProcessor) Process(entry *LogEntry) {
 	}
 }
 
-func (df *DefaultProcessor) Close() {
+func (df *DefaultProcessor) Close() error {
+	return df.Dispatcher.Close()
 }
 
 // Initializers for LogProcessor
@@ -60,7 +61,7 @@ func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
 	return &DefaultProcessor{priority: priority, Dispatcher: dispatcher}
 }
 
-func NewProcessorFromWriter(priority Priority, writer io.Writer) LogProcessor {
+func NewProcessorFromWriter(priority Priority, writer io.WriteCloser) LogProcessor {
 	d := NewLogDispatcher(writer)
 	return &DefaultProcessor{priority: priority, Dispatcher: d}
 }

@@ -4,9 +4,9 @@
 package golog
 
 import (
-	"time"
-	"testing"
 	"strings"
+	"testing"
+	"time"
 )
 
 type ChanWriter struct {
@@ -19,7 +19,12 @@ func (ch *ChanWriter) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (ch *ChanWriter) Close() chan string {
+func (ch *ChanWriter) Close() error {
+	close(ch.msg)
+	return nil
+}
+
+func (ch *ChanWriter) CloseRenew() chan string {
 	close(ch.msg)
 	prev := ch.msg
 	ch.msg = make(chan string, 31)
@@ -28,20 +33,20 @@ func (ch *ChanWriter) Close() chan string {
 
 func NewChanWriter() *ChanWriter {
 	ch := make(chan string, 31)
-	return &ChanWriter { msg: ch }
+	return &ChanWriter{msg: ch}
 }
 
 func checkFiltersForPriority(priority Priority, logger *Logger, chw *ChanWriter, t *testing.T) {
 	logger.SetPriority("chan", priority)
 	// Try to write a log of all priority levels, regardless of what our filter is
-	for _, p := range(Priorities()) {
+	for _, p := range Priorities() {
 		logger.Log(p, "Mmm, cherry blossom tea <3")
 	}
 	dur, _ := time.ParseDuration("100ms")
 	time.Sleep(dur)
-	receiver := chw.Close()
+	receiver := chw.CloseRenew()
 
-	for msg := range(receiver) {
+	for msg := range receiver {
 		strPriority := strings.Split(msg, ":")[0]
 		msgPriority := ParsePriority(strPriority)
 		if msgPriority > priority {
@@ -58,8 +63,8 @@ func TestFilteredPriorities(t *testing.T) {
 	proc := NewProcessorFromWriter(priority, chw)
 	logger := NewLogger("filter: ")
 	logger.AddProcessor("chan", proc)
-	
-	for _, p := range(Priorities()) {
+
+	for _, p := range Priorities() {
 		checkFiltersForPriority(p, logger, chw, t)
 	}
 }

@@ -197,6 +197,15 @@ func (dl *Logger) DisableProcessor(name string) {
 	dl.processors[name].SetPriority(log_DISABLE)
 }
 
+func (dl *Logger) Close() {
+	for name, proc := range dl.processors {
+		dl.processors[name] = nil
+		if proc != nil {
+			proc.Close()
+		}
+	}
+}
+
 // Begin Logging interface.  The following methods are used for logging
 // messages to whatever processors this logger is associated with.
 //

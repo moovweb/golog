@@ -2,7 +2,6 @@ package golog
 
 import (
 	"io"
-	"io/ioutil"
 )
 
 // Object which is sent through the log channel
@@ -16,8 +15,8 @@ type LogMsg struct {
 // objects, and send them through the channel that it is associated with.
 // 
 type LogDispatcher struct {
-	w  io.Writer    // The resource Writer this dispatcher is associated with.
-	ch chan *LogMsg // The channel to send LogMsg objects to.
+	w  io.WriteCloser // The resource Writer this dispatcher is associated with.
+	ch chan *LogMsg   // The channel to send LogMsg objects to.
 }
 
 func (lw *LogDispatcher) Send(message string) {
@@ -25,13 +24,13 @@ func (lw *LogDispatcher) Send(message string) {
 	lw.ch <- &entry
 }
 
-// Initializers of LogDispatcher
-//
-func NewLogDispatcher(writer io.Writer) *LogDispatcher {
-	lw := LogDispatcher{w: writer, ch: logchan}
-	return &lw
+func (lw *LogDispatcher) Close() error {
+	return lw.w.Close()
 }
 
-func NewNullDispatcher() *LogDispatcher {
-	return NewLogDispatcher(ioutil.Discard)
+// Initializers of LogDispatcher
+//
+func NewLogDispatcher(writer io.WriteCloser) *LogDispatcher {
+	lw := LogDispatcher{w: writer, ch: logchan}
+	return &lw
 }
