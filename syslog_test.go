@@ -107,9 +107,9 @@ func TestSingleLogWrite(t *testing.T) {
 }
 
 func TestMultipleLogWrites(t *testing.T) {
-	for f := range SyslogFacilities() {
-		for p := range Priorities() {
-			checkSyslogPost(Facility(f), Priority(p), t)
+	for _, f := range SyslogFacilities() {
+		for _, p := range Priorities() {
+			checkSyslogPost(f, p, t)
 		}
 	}
 }
@@ -135,7 +135,6 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 		go func() {
 			logger.Info("Testing routine %08d", tmp)
 			wg.Done()
-			println("finished: " + strconv.Itoa(tmp))
 		}()
 	}
 	wg.Wait()
