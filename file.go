@@ -9,8 +9,8 @@ import "io"
 import "os"
 
 const (
-	defaultFilePerms = 644
-	defaultDirPerms  = 775
+	defaultFilePerms = 0644
+	defaultDirPerms  = 0775
 )
 
 func getFileNames(folderPath string) ([]string, error) {
@@ -32,7 +32,7 @@ func getFileNames(folderPath string) ([]string, error) {
 }
 
 func openFile(filename string) (io.WriteCloser, error) {
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, defaultFilePerms)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, os.FileMode(defaultFilePerms))
 	if err != nil {
 		return nil, err
 	}
