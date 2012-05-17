@@ -3,6 +3,7 @@ package golog
 import (
 	"io"
 	"sync"
+	"fmt"
 )
 
 // ***************************************************************************
@@ -46,7 +47,9 @@ func (df *DefaultProcessor) GetPriority() Priority {
 
 func (df *DefaultProcessor) Process(entry *LogEntry) {
 	if entry.Priority <= df.GetPriority() {
-		msg := entry.Priority.String() + ": " + entry.Prefix + entry.Msg
+		time := entry.Created
+		timeStamp := fmt.Sprintf("%s %d %02d:%02d:%02d ", time.Month().String()[0:3], time.Day(), time.Hour(), time.Minute(), time.Second())
+		msg := timeStamp + entry.Priority.String() + ": " + entry.Prefix + entry.Msg
 		df.Dispatcher.Send(msg)
 	}
 }
@@ -63,5 +66,5 @@ func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
 
 func NewProcessorFromWriter(priority Priority, writer io.WriteCloser) LogProcessor {
 	d := NewLogDispatcher(writer)
-	return &DefaultProcessor{priority: priority, Dispatcher: d}
+	return NewProcessor(priority, d)
 }
