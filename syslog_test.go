@@ -139,6 +139,9 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 	}
 	wg.Wait()
 
+	dur, _ := time.ParseDuration("100ms")
+	time.Sleep(dur)
+
 	logs := <-msgChan
 	log_lines := strings.Split(strings.TrimSpace(logs), "\n")
 	sort.Strings(log_lines)
