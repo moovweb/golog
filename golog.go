@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -89,6 +90,7 @@ func (p Priority) String() string {
 }
 
 func ParsePriority(p string) Priority {
+	p = strings.ToUpper(p)
 	switch {
 	case LOG_EMERG.String() == p:
 		return LOG_EMERG
