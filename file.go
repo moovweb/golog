@@ -48,20 +48,3 @@ func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) 
 	return NewProcessor(priority, filer), nil
 }
 
-func NewRollingFileBySizeProcessor(priority Priority, filename string, maxSize int64, maxRolls int) (LogProcessor, error) {
-	w, err := newRollingFileWriterSize(filename, maxSize, maxRolls)
-	if err != nil {
-		return nil, err
-	}
-	filer := NewLogDispatcher(w)
-	return NewProcessor(priority, filer), nil
-}
-
-func NewRollingFileByDateProcessor(priority Priority, filename string, datePattern string) (LogProcessor, error) {
-	w, err := newRollingFileWriterDate(filename, datePattern)
-	if err != nil {
-		return nil, err
-	}
-	filer := NewLogDispatcher(w)
-	return NewProcessor(priority, filer), nil
-}
