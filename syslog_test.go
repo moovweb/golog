@@ -83,7 +83,7 @@ func closeSyslog(logger *Logger) {
 	logger.AddProcessor("syslog", nil)
 }
 
-func TestSingleLogWrite(t *testing.T) {
+func checkSyslogPost(f Facility, p Priority, t *testing.T) {
 	msgChan := make(chan string)
 	servAddy, err := startServer(msgChan)
 	if err != nil {
@@ -91,18 +91,28 @@ func TestSingleLogWrite(t *testing.T) {
 	}
 
 	prefix := "syslog_single_test: "
-	facility := LOCAL0
 	minPriority := LOG_DEBUG
 	message := "Testing Info."
-	priority := LOG_INFO
 
-	logger := createSyslogger(servAddy, prefix, facility, minPriority, t)
+	logger := createSyslogger(servAddy, prefix, f, minPriority, t)
 
-	logger.Info(message)
+	logger.Log(p, message)
 
 	rcvd := <-msgChan
-	checkOutput(rcvd, facility, priority, prefix, message + "\n", t)
+	checkOutput(rcvd, f, p, prefix, message + "\n", t)
 	closeSyslog(logger)
+}
+
+func TestSingleLogWrite(t *testing.T) {
+	checkSyslogPost(LOCAL0, LOG_INFO, t)
+}
+
+func TestMultipleLogWrites(t *testing.T) {
+	for p := range(Priorities()) {
+		for f := range(SyslogFacilities()) {
+			checkSyslogPost(Facility(f), Priority(p), t)
+		}
+	}
 }
 
 func TestConcurrentSyslogWrite(t *testing.T) {

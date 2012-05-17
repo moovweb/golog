@@ -22,6 +22,18 @@ const (
 	LOCAL7
 )
 
+func SyslogFacilities() []Facility {
+	return []Facility {
+		LOCAL0,
+		LOCAL1,
+		LOCAL2,
+		LOCAL3,
+		LOCAL4,
+		LOCAL5,
+		LOCAL6,
+		LOCAL7 }
+}
+
 // Create a socket connection to the syslog
 func unixSyslog() (sock net.Conn, err error) {
 	logTypes := []string{"unixgram", "unix"}

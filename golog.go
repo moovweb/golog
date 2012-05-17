@@ -41,6 +41,18 @@ const (
 	LOG_DEBUG
 )
 
+func Priorities() []Priority {
+	return []Priority {
+		LOG_EMERG,
+		LOG_ALERT,
+		LOG_CRIT,
+		LOG_ERR,
+		LOG_WARNING,
+		LOG_NOTICE,
+		LOG_INFO,
+		LOG_DEBUG }
+}
+
 // If a priority is out of bounds given any input, we'll simply
 // truncate it to the closest valid priority.
 func BoundPriority(priority Priority) Priority {
