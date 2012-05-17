@@ -2,36 +2,17 @@ package golog
 
 import (
 	"testing"
-	"net"
 	"time"
+	"net"
 	"strings"
 	"strconv"
+	"sync"
+	"sort"
 )
-
-// When reading from the socket, we read null chars if nothing is left to 
-// read, so we have to trim them out before we do our comparison.
-func trimNull(s string) string {
-	if s == "" {
-		return s
-	}
-	var i int
-	for i = 0; i < len(s); i++ {
-		if s[i] != 0x00 {
-			break
-		}
-	}
-	var j int
-	for j = len(s)-1; j >= 0; j-- {
-		if s[j] != 0x00 {
-			break
-		}
-	}
-	return s[i:j]
-}
 
 func checkOutput(result string, f Facility, p Priority, prefix, msg string, t *testing.T) {
 	expectedStart := "<" + strconv.Itoa(int(f) * 8 + int(p)) + ">"
-	expectedEnd := p.String() + ": " + prefix + strings.TrimSpace(msg)
+	expectedEnd := p.String() + ": " + prefix + msg
 	if !strings.HasPrefix(result, expectedStart) || !strings.HasSuffix(result, expectedEnd) {
 		errmsg := "Failed log consistency check:\nExpected '%s'\nResult   '%s'"
 		t.Errorf(errmsg, expectedStart + " ... " + expectedEnd, result)
@@ -43,22 +24,21 @@ func runSyslogReader(c net.PacketConn, msgChan chan<- string) {
 	var rcvd string = ""
 	for {
 		n, _, err := c.ReadFrom(buf[0:])
-		if err != nil || n == 0 {
-			break
-		}
-		rcvd += string(buf[0:])
+		if err != nil || n == 0 { break }
+		rcvd += string(buf[0:n])
 	}
-	msgChan <- trimNull(rcvd)
+
+	msgChan <- rcvd
 	c.Close()
 }
 
-func startTimedServer(msgChan chan<- string, ms int) (serverAddr string, err error){
+func startServer(msgChan chan<- string) (serverAddr string, err error){
 	c, e := net.ListenPacket("udp", "127.0.0.1:0")
 	if e != nil {
 		return "", e
 	}
 	serverAddr = c.LocalAddr().String()
-	c.SetReadDeadline(time.Now().Add(time.Duration(ms) * time.Millisecond))
+	c.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 	go runSyslogReader(c, msgChan)
 	return serverAddr, nil
 }
@@ -103,14 +83,14 @@ func closeSyslog(logger *Logger) {
 	logger.AddProcessor("syslog", nil)
 }
 
-func TestSingleLogWrite(t *testing.T) {
+func DISABLE_TestSingleLogWrite(t *testing.T) {
 	msgChan := make(chan string)
-	servAddy, err := startTimedServer(msgChan, 100)
+	servAddy, err := startServer(msgChan)
 	if err != nil {
-		t.Errorf("Couldn't start syslog listener:  %s", err.Error())
+		t.Fatalf("Couldn't start syslog listener:  %s", err.Error())
 	}
 
-	prefix := "syslog_test: "
+	prefix := "syslog_single_test: "
 	facility := LOCAL0
 	minPriority := LOG_DEBUG
 	message := "Testing Info."
@@ -119,11 +99,46 @@ func TestSingleLogWrite(t *testing.T) {
 	logger := createSyslogger(servAddy, prefix, facility, minPriority, t)
 
 	logger.Info(message)
+
 	rcvd := <-msgChan
 	checkOutput(rcvd, facility, priority, prefix, message + "\n", t)
 	closeSyslog(logger)
 }
 
 func TestConcurrentSyslogWrite(t *testing.T) {
+	msgChan := make(chan string)
+	servAddy, err := startServer(msgChan)
+	if err != nil {
+		t.Fatalf("Couldn't start syslog listener:  %s", err.Error())
+	}
+
+	prefix := "syslog_conc_test: "
+	facility := LOCAL0
+	minPriority := LOG_DEBUG
 	
+	logger := createSyslogger(servAddy, prefix, facility, minPriority, t)
+
+	total_routines := 5000
+	var wg sync.WaitGroup
+	for i := 0; i < total_routines; i++ {
+		var tmp int = i
+		wg.Add(1)
+		go func() {
+			logger.Info("Testing routine %08d", tmp)
+			wg.Done()
+			println ("finished: " + strconv.Itoa(tmp))
+		}()
+	}
+	wg.Wait()
+	
+	logs := <-msgChan
+	log_lines := strings.Split(strings.TrimSpace(logs), "\n")
+	sort.Strings(log_lines)
+	if len(log_lines) != total_routines {
+		errmsg := "Some log lines are missing! Expected %d, Found %d"
+		t.Fatalf(errmsg, total_routines, len(log_lines))
+	}
 }
+
+
+
