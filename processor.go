@@ -1,6 +1,9 @@
 package golog
 
-import "sync"
+import (
+	"sync"
+	"io"
+)
 
 // ***************************************************************************
 // LogProcessor interface defines the method that we expect all LogProcessors
@@ -55,4 +58,9 @@ func (df *DefaultProcessor) Close() {
 //
 func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
 	return &DefaultProcessor{priority: priority, Dispatcher: dispatcher}
+}
+
+func NewProcessorFromWriter(priority Priority, writer io.Writer) LogProcessor {
+	d := NewLogDispatcher(writer)
+	return &DefaultProcessor{priority: priority, Dispatcher: d}
 }

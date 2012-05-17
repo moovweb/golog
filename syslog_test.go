@@ -54,9 +54,6 @@ func checkSyslogNewProcessor(f Facility, p Priority, t *testing.T) {
 
 func TestNew(t *testing.T) {
 	checkSyslogNewProcessor(LOCAL0, LOG_DEBUG, t)
-	// We could check all combinations here, but as of right now,
-	// creating a new syslog processor does not depend on facility or priority.
-	// If it ever does, then we should add the rest of the combinations.
 }
 
 func TestDialSyslog(t *testing.T) {
@@ -92,14 +89,14 @@ func checkSyslogPost(f Facility, p Priority, t *testing.T) {
 
 	prefix := "syslog_single_test: "
 	minPriority := LOG_DEBUG
-	message := "Testing Info."
+	message := "Testing."
 
 	logger := createSyslogger(servAddy, prefix, f, minPriority, t)
-
+	
 	logger.Log(p, message)
-
 	rcvd := <-msgChan
 	checkOutput(rcvd, f, p, prefix, message + "\n", t)
+
 	closeSyslog(logger)
 }
 
@@ -108,8 +105,8 @@ func TestSingleLogWrite(t *testing.T) {
 }
 
 func TestMultipleLogWrites(t *testing.T) {
-	for p := range(Priorities()) {
-		for f := range(SyslogFacilities()) {
+	for f := range(SyslogFacilities()) {
+		for p := range(Priorities()) {
 			checkSyslogPost(Facility(f), Priority(p), t)
 		}
 	}

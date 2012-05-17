@@ -44,7 +44,6 @@ func NewFileProcessor(priority Priority, filename string) (LogProcessor, error) 
 	if err != nil {
 		return nil, err
 	}
-	filer := NewLogDispatcher(w)
-	return NewProcessor(priority, filer), nil
+	return NewProcessorFromWriter(priority, w), nil
 }
 
