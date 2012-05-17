@@ -83,7 +83,7 @@ func closeSyslog(logger *Logger) {
 	logger.AddProcessor("syslog", nil)
 }
 
-func DISABLE_TestSingleLogWrite(t *testing.T) {
+func TestSingleLogWrite(t *testing.T) {
 	msgChan := make(chan string)
 	servAddy, err := startServer(msgChan)
 	if err != nil {
