@@ -34,20 +34,25 @@ import (
 )
 
 func main() {
-	teapot := 8675309
-	//rw := &sync.RWMutex{}
-	starter, finisher := &sync.WaitGroup{}, &sync.WaitGroup{}
-	starter.Add(1)
-	for i := 0; i < 100000; i++ {
+
+	//teapot := 8675309
+	numchan := make(chan int, 100)
+	go func() {
+		for {
+			numchan <- 5
+		}
+	}()
+	//	rw := &sync.RWMutex{}
+	finisher := &sync.WaitGroup{}
+	//starter.Add(1)
+	for i := 0; i < 400; i++ {
 		finisher.Add(1)
 		go func() {
 			j := 0
-			starter.Wait()
+			//starter.Wait()
 			now := time.Now()
 			for ; j < 10000000; j++ {
-				//rw.Lock()
-				teapot--
-				//rw.Unlock()
+				<-numchan
 			}
 			duration := time.Now().Sub(now)
 			avg := float64(duration.Nanoseconds()) / float64(j)
@@ -55,6 +60,5 @@ func main() {
 			finisher.Done()
 		}()
 	}
-	starter.Done()
 	finisher.Wait()
 }
