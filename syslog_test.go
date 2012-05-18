@@ -79,7 +79,7 @@ func createSyslogger(servAddy, prefix string, f Facility, p Priority, t *testing
 
 // essentially closes the log
 func closeSyslog(logger *Logger) {
-	logger.AddProcessor("syslog", nil)
+	logger.Close()
 }
 
 func checkSyslogPost(f Facility, p Priority, t *testing.T) {
@@ -139,7 +139,7 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 	}
 	wg.Wait()
 
-	dur, _ := time.ParseDuration("100ms")
+	dur, _ := time.ParseDuration("2s")
 	time.Sleep(dur)
 
 	logs := <-msgChan
