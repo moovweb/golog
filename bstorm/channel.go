@@ -1,64 +1,133 @@
-// This go file was written as a test to see how much latency using read/write
-// locks adds to a simple variable read.  Running this program with and without
-// the use of read/write locks showed that the rw.RLock()/RUnlock() methods add
-// roughly 20ns of time to a read.
+// This go file was written to test the latency on the user side when writing
+// a lot of logs, or in other words, if I want to log something, what is the
+// average time I'm going to wait on the call to log(...).  We want to test
+// different logging implementations and see how they compare.
 //
-// This test was performed in order to judge the way we would implement the
-// ability to change priorities of processors on the fly.  We considered the
-// following implementations:
+// Implementations:
+//	1.	A logger contains a single channel it sends messages to where a 
+//			servicing routine listens on and writes to the writer.  
+//	2.	A logger contains a set number of channels per writer, and we have
+//			multiple servicing routines.  They protect eachother with a lock.
+//	3.	We avoid using channels all together and just write the log in place,
+//			protected by a lock.
 //
-// 1)	Wrapping the priority field in the Processor with a RW lock and offering
-//		Setter/Getter methods for it.
-// 2)	Pushing the checking/filtering of the priority of a message to the 
-//		writer go routine which writes the message to the appropriate writer
-// 3)	Each go routine in the main application has its own logger and thus,
-//		will have to update the priority accordingly.  However, since the logger
-//		is only used in a single go routine, there's no race conditions in 
-//		simply updating the priority.
+// From what we could find in our tests, it seems that locking and writing
+// in place were slightly better than either channel approach, but not by much.
 //
-// We chose solution (1) after the test below since the penalty for adding
-// the RW locks is small and offers more flexibilty in terms of how a logger
-// can be used (aka, we can have one global logger for all go routines, etc...)
+// Testing Context: 5000 routines, each writing to the log 10000 times.
 //
-// Solution (2) is elegant in the sense that it would require no extra locking,
-// however, it would mean that the application as a whole would have to do more
-// work as messages that would be filtered out before hand will now have to 
-// go through the log channel (then to get filtered out).
+//	Approach (1) had an average wait time of roughly 23ms per log write.
+//	Approach (2) had an average wait time of roughly 23ms per log write.
+//	Approach (3) had an average wait time of roughly 21ms per log write.
+//
+// Other Findings:
+//
+//	runtime.GOMAXPROCS(runtime.NumCPU()) had a huge improvement in performance.
+//	Nearly halfed the wait time.
 //
 package main
 
 import (
-	"fmt"
-	"sync"
 	"time"
+	"net"
+	"golog"
+	"strconv"
+	"sync"
+//	"runtime"
 )
+const bufSize = 512
+var mu *sync.Mutex = &sync.Mutex{}
+
+func lock_service(msgChan <-chan string, syslog net.Conn) {
+	println("Locked Service started.")
+	for s := range(msgChan) {
+		mu.Lock()
+		syslog.Write([]byte(s))
+		mu.Unlock()
+	}
+}
+
+func service(msgChan <-chan string, syslog net.Conn) {
+	println("Service started.")
+	for s := range(msgChan) {
+		syslog.Write([]byte(s))
+	}
+}
+
+func clog(msgChan chan<- string, reps int) {
+	t := time.Now()
+	for i := 0; i < reps; i++ {
+		msgChan <- "hi"
+	}
+	sum := int64(time.Since(t))
+	avg := int(sum / int64(reps))
+	println("Average wait time:  " + strconv.Itoa(avg))
+}
+
+func clogWrite(syslog net.Conn, reps int) {
+	t := time.Now()
+	for i := 0; i < reps; i++ {
+		mu.Lock()
+		syslog.Write([]byte("hi"))
+		mu.Unlock()
+	}
+	sum := int64(time.Since(t))
+	avg := int(sum / int64(reps))
+	println("Average wait time:  " + strconv.Itoa(avg))
+}
+
+func test_single_chan(syslog net.Conn, num_routines, num_writes int) {
+	msgChan := make(chan string, bufSize)
+
+	go service(msgChan, syslog)
+
+	reps := num_routines
+	for i := 0; i < reps; i++ {
+		go clog(msgChan, num_writes)
+	}
+	d, _ := time.ParseDuration("1000s")
+	time.Sleep(d)
+	close(msgChan)
+}
+
+func test_multi_chan(syslog net.Conn, num_routines, num_writes, num_chans int) {
+	chans := make([]chan string, num_chans)
+	for i := 0; i < num_chans; i++ {
+		chans[i] = make(chan string, bufSize)
+		go lock_service(chans[i], syslog)
+	}
+
+	reps := num_routines
+	for i := 0; i < reps; i++ {
+		go clog(chans[i % num_chans], num_writes)
+	}
+
+	d, _ := time.ParseDuration("1000s")
+	time.Sleep(d)
+	for i := 0; i < num_chans; i++ {
+		close(chans[i])
+	}
+}
+
+func test_nochan_lock(syslog net.Conn, num_routines, num_writes int) {
+	reps := num_routines
+	for i := 0; i < reps; i++ {
+		go clogWrite(syslog, num_writes)
+	}
+
+	d, _ := time.ParseDuration("1000s")
+	time.Sleep(d)
+}
 
 func main() {
-
-	//teapot := 8675309
-	numchan := make(chan int, 100)
-	go func() {
-		for {
-			numchan <- 5
-		}
-	}()
-	//	rw := &sync.RWMutex{}
-	finisher := &sync.WaitGroup{}
-	//starter.Add(1)
-	for i := 0; i < 400; i++ {
-		finisher.Add(1)
-		go func() {
-			j := 0
-			//starter.Wait()
-			now := time.Now()
-			for ; j < 10000000; j++ {
-				<-numchan
-			}
-			duration := time.Now().Sub(now)
-			avg := float64(duration.Nanoseconds()) / float64(j)
-			fmt.Printf("Avg: %fns\n", avg)
-			finisher.Done()
-		}()
+//	runtime.GOMAXPROCS(runtime.NumCPU())
+	syslog, err := golog.DialSyslog("", "")
+	if err != nil {
+		println ("Couldn't coonect to syslog:  " + err.Error())
 	}
-	finisher.Wait()
+
+//	test_single_chan(syslog, 5000, 10000)
+//	test_multi_chan(syslog, 5000, 10000, 10)
+	test_nochan_lock(syslog, 5000, 10000)
+
 }
