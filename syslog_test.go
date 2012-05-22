@@ -127,7 +127,7 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 
 	logger := createSyslogger(servAddy, prefix, facility, minPriority, t)
 
-	total_routines := 5000
+	total_routines := 500
 	var wg sync.WaitGroup
 	for i := 0; i < total_routines; i++ {
 		var tmp int = i
