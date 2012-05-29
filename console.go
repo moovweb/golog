@@ -4,6 +4,6 @@ package golog
 
 import "os"
 
-func NewConsoleProcessor(priority Priority) LogProcessor {
-	return NewProcessorFromWriter(priority, os.Stdout)
+func NewConsoleProcessor(priority Priority, verbose bool) LogProcessor {
+	return NewProcessorFromWriter(priority, os.Stdout, verbose)
 }
