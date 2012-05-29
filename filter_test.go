@@ -60,7 +60,7 @@ func checkFiltersForPriority(priority Priority, logger *Logger, chw *ChanWriter,
 func TestFilteredPriorities(t *testing.T) {
 	priority := LOG_DEBUG
 	chw := NewChanWriter()
-	proc := NewProcessorFromWriter(priority, chw)
+	proc := NewProcessorFromWriter(priority, chw, true)
 	logger := NewLogger("filter: ")
 	logger.AddProcessor("chan", proc)
 
