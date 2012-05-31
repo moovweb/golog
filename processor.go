@@ -28,6 +28,7 @@ type DefaultProcessor struct {
 	mu         sync.RWMutex   // Read/Write Lock used to protect the priority.
 	priority   Priority       // Messages need to be at least this important to get through.
 	Dispatcher *LogDispatcher // Dispatcher used to send messages to the channel
+	Verbose bool
 }
 
 // Atomically set the new priority.  All accesses to priority need to be
@@ -49,7 +50,13 @@ func (df *DefaultProcessor) Process(entry *LogEntry) {
 	if entry.Priority <= df.GetPriority() {
 		time := entry.Created
 		timeStamp := fmt.Sprintf("%s %d %02d:%02d:%02d ", time.Month().String()[0:3], time.Day(), time.Hour(), time.Minute(), time.Second())
-		msg := timeStamp + entry.Priority.String() + ": " + entry.Prefix + entry.Msg
+		msg := ""
+
+		if df.Verbose {
+			msg += timeStamp + entry.Priority.String() + ": "
+		}
+
+		msg += entry.Prefix + entry.Msg
 		df.Dispatcher.Send(msg)
 	}
 }
@@ -60,11 +67,11 @@ func (df *DefaultProcessor) Close() error {
 
 // Initializers for LogProcessor
 //
-func NewProcessor(priority Priority, dispatcher *LogDispatcher) LogProcessor {
-	return &DefaultProcessor{priority: priority, Dispatcher: dispatcher}
+func NewProcessor(priority Priority, dispatcher *LogDispatcher, verbose bool) LogProcessor {
+	return &DefaultProcessor{priority: priority, Dispatcher: dispatcher, Verbose: verbose}
 }
 
-func NewProcessorFromWriter(priority Priority, writer io.WriteCloser) LogProcessor {
+func NewProcessorFromWriter(priority Priority, writer io.WriteCloser, verbose bool) LogProcessor {
 	d := NewLogDispatcher(writer)
-	return NewProcessor(priority, d)
+	return NewProcessor(priority, d, verbose)
 }

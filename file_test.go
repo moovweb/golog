@@ -28,7 +28,7 @@ func TestDifferentPriorities(t *testing.T) {
 		t.Fatalf("Couldn't open tmp file: %s", err.Error())
 	}
 
-	proc := NewProcessorFromWriter(LOG_DEBUG, tmpfile)
+	proc := NewProcessorFromWriter(LOG_DEBUG, tmpfile, true)
 	logger := NewLogger("file_test: ")
 	logger.AddProcessor("file", proc)
 	
@@ -61,7 +61,7 @@ func TestConcurrentLogging(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't create tmp file: %s", err.Error())
 	}
-	proc := NewProcessorFromWriter(LOG_DEBUG, tmpfile)
+	proc := NewProcessorFromWriter(LOG_DEBUG, tmpfile, true)
 	logger := NewLogger("conc_test: ")
 	logger.AddProcessor("file", proc)
 

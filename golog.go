@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"sync"
 )
 
 // ****************************************************************************
@@ -124,6 +125,7 @@ type Logger struct {
 	// prefix used to prepend to logs if no other prefix is supplied.
 	prefix     string
 	processors map[string]LogProcessor
+	mu         sync.RWMutex   // Read/Write Lock used to protect the prefix.
 }
 
 // Storage object used to pass the log data over to the Processor.
@@ -132,6 +134,12 @@ type LogEntry struct {
 	Priority Priority  // Priority of the log message.
 	Msg      string    // The actual message payload
 	Created  time.Time // Time this message was created.
+}
+
+func (dl *Logger) SetPrefix(newPrefix string)  {
+	dl.mu.Lock()
+	dl.prefix = newPrefix
+	dl.mu.Unlock()
 }
 
 // Set/Get the priority of the Processor with the given name.
@@ -207,7 +215,11 @@ func (dl *Logger) LogP(priority Priority, prefix string, format string, args ...
 }
 
 func (dl *Logger) Log(p Priority, format string, args ...interface{}) {
-	dl.LogP(p, dl.prefix, format, args...)
+	dl.mu.RLock()
+	prefix := dl.prefix
+	dl.mu.RUnlock()
+
+	dl.LogP(p, prefix, format, args...)
 }
 
 func (dl *Logger) Debug(format string, args ...interface{}) {

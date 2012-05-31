@@ -148,7 +148,7 @@ func NewSyslogProcessorAt(network, addy string, f Facility, p Priority) (LogProc
 	}
 
 	dsp := NewLogDispatcher(sw)
-	defaultProcessor := NewProcessor(p, dsp).(*DefaultProcessor)
+	defaultProcessor := NewProcessor(p, dsp, true).(*DefaultProcessor)
 	return &SyslogProcessor{DefaultProcessor: defaultProcessor, facility: f}, nil
 }
 

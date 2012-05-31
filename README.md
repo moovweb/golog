@@ -13,7 +13,7 @@ Getting started is pretty easy.  Simply create a new logger and add processors t
 
 		...
 
-		console := golog.NewConsoleProcessor(golog.LOG_INFO) // only log messages more important than or equal to info.
+		console := golog.NewConsoleProcessor(golog.LOG_INFO, verboseBoolean) // only log messages more important than or equal to info.
 		logger := golog.NewLogger("some prefix here:  ")
 		logger.AddProcessor(console)
 
