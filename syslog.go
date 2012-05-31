@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"io"
 )
 
 // Syslog facilities to log to.  We only list the LOCAL set as others
@@ -34,6 +35,51 @@ func SyslogFacilities() []Facility {
 		LOCAL7}
 }
 
+type SyslogWriter struct {
+	syslogConn io.WriteCloser
+}
+
+func (sw *SyslogWriter) reconnect() error {
+	if sw.syslogConn != nil {
+		sw.syslogConn.Close()
+	}
+
+	newSyslogConn, err := dialSyslog("", "")
+	if err != nil {
+		sw.syslogConn = nil
+		return err
+	}
+
+	sw.syslogConn = newSyslogConn
+	return nil
+}
+
+func (sw *SyslogWriter) Write(data []byte) (n int, err error) {
+	if sw.syslogConn == nil {
+		err = sw.reconnect()
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	n, err = sw.syslogConn.Write(data)
+	if err != nil {
+		err = sw.reconnect()
+		if err != nil {
+			return 0, err
+		}
+		return sw.syslogConn.Write(data)
+	}
+	return n, err
+}
+
+func (sw *SyslogWriter) Close() (err error) {
+	if sw.syslogConn != nil {
+		return sw.syslogConn.Close()
+	}
+	return nil
+}
+
 // Create a socket connection to the syslog
 func unixSyslog() (sock net.Conn, err error) {
 	logTypes := []string{"unixgram", "unix"}
@@ -50,11 +96,19 @@ func unixSyslog() (sock net.Conn, err error) {
 	return nil, err
 }
 
-func DialSyslog(network, raddr string) (sock net.Conn, err error) {
+func dialSyslog(network, raddr string) (sock net.Conn, err error) {
 	if network == "" {
 		return unixSyslog()
 	}
 	return net.Dial(network, raddr)
+}
+
+func DialSyslog(network, raddr string) (sock io.WriteCloser, err error) {
+	syslogConn, err := dialSyslog(network, raddr)
+	if err != nil {
+		return nil, err
+	}
+	return &SyslogWriter{ syslogConn: syslogConn }, nil
 }
 
 // ****************************************************************************
