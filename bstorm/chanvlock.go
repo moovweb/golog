@@ -19,7 +19,6 @@ type Work interface {
 
 type StupidWork struct {
 	created time.Time
-	data string
 }
 
 func (w StupidWork) Do() int64 {
@@ -29,8 +28,28 @@ func (w StupidWork) Do() int64 {
 	return waitTime.Nanoseconds()
 }
 
+type CompressWork struct {
+	created time.Time
+	data string
+}
+
+func (c *CompressWork) Do() int64 {
+	waitTime := time.Since(c.created)
+	var bit uint8 = 0
+	d := time.Duration(1) * time.Nanosecond
+	for i := 0; i < len(c.data); i++ {
+		bit ^= c.data[i]
+	}
+	time.Sleep(d)
+	return waitTime.Nanoseconds()
+}
+
 func NewWork() Work {
-	return &StupidWork { created: time.Now(), data: "Hey, listen..." }
+	stuff := "helloooooo"
+	for i := 0; i < 15; i++ {
+		stuff += stuff
+	}
+	return &CompressWork { created: time.Now(), data: stuff }
 }
 
 type Worker interface {
@@ -125,19 +144,53 @@ func StartProducers(numProds, numJobs int, workers []Worker) {
 
 
 
-var numProds, numJobs, avgCap int = 5000, 10000, 50000
 func main() {
+	if len(os.Args) == 1 {
+		println("Usage:")
+		println("./" + os.Args[0] + " <lock|chan> <numProducers> <numJobs> <avgCap> <numWorkers> [...workerArgs]")
+		println()
+		os.Exit(1)
+	}
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	workerType := os.Args[1]
-	numWorkers, err := strconv.Atoi(os.Args[2])
+	numProds, err := strconv.Atoi(os.Args[2])
 	if err != nil {
-		numWorkers = 5
+		println("Number of producers is not an integer:  " + os.Args[2])
+		os.Exit(1)
 	}
+	numJobs, err := strconv.Atoi(os.Args[3])
+	if err != nil {
+		println("Number of jobs is not an integer: " + os.Args[3])
+		os.Exit(1)
+	}
+
+	avgCap, err := strconv.Atoi(os.Args[4])
+	if err != nil {
+		println("The number of units to calculate the average for is not an integer.")
+		os.Exit(1)
+	}
+
+	numWorkers, err := strconv.Atoi(os.Args[5])
+	if err != nil {
+		println("The number of worker resources is not an integer.")
+		os.Exit(1)
+	}
+
 	wargs := ""
-	if len(os.Args) > 3 {
-		wargs = os.Args[3]
+	if len(os.Args) > 6 {
+		wargs = os.Args[6]
 	}
-	
+
+	println("Using the following params:")
+	println("\tType: " + workerType)
+	println("\tNum Prods: " + strconv.Itoa(numProds))
+	println("\tNum Jobs: " + strconv.Itoa(numJobs))
+	println("\tAvg Cap: " + strconv.Itoa(avgCap))
+	println("\tNum Workers: " + strconv.Itoa(numWorkers))
+	println("\tWorker Args: " + wargs)
+	println()
+
 
 	workers := GenerateWorkers(workerType, numWorkers)
 	for _, w := range(workers) {
