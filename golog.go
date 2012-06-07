@@ -177,7 +177,13 @@ func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
 	if p := dl.processors[name]; p != nil {
 		p.Close()
 	}
-	dl.processors[name] = processor
+
+	if processor == nil {
+		// If we're setting it to nil, let's take that as deleting the key.
+		delete(dl.processors, name)
+	} else {
+		dl.processors[name] = processor
+	}
 }
 
 func (dl *Logger) DisableProcessor(name string) {
@@ -186,7 +192,7 @@ func (dl *Logger) DisableProcessor(name string) {
 
 func (dl *Logger) Close() {
 	for name, proc := range dl.processors {
-		dl.processors[name] = nil
+		delete(dl.processors, name)
 		if proc != nil {
 			proc.Close()
 		}
