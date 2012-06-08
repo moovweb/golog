@@ -126,7 +126,7 @@ type SyslogProcessor struct {
 // (DefaultProcessor behavior), but we also format the log message in a 
 // special way using the priority and facility in a way that syslog 
 // understand.
-const syslogMsgFormat = "<%d>%s %s: %s"
+const syslogMsgFormat = "<%d>%s: %s: %s"
 
 func (su *SyslogProcessor) Process(entry *LogEntry) {
 	if entry.Priority <= su.GetPriority() {
