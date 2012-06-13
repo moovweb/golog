@@ -2,6 +2,7 @@ package golog
 
 import (
 	"net"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -55,14 +56,14 @@ func checkSyslogNewProcessor(f Facility, p Priority, t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	if GOARCH == "windows" {
+	if runtime.GOOS == "windows" {
 		return
 	}
 	checkSyslogNewProcessor(LOCAL0, LOG_DEBUG, t)
 }
 
 func TestDialSyslog(t *testing.T) {
-	if GOARCH == "windows" {
+	if runtime.GOOS == "windows" {
 		return
 	}
 	conn, err := DialSyslog("", "")
@@ -109,14 +110,14 @@ func checkSyslogPost(f Facility, p Priority, t *testing.T) {
 }
 
 func TestSingleLogWrite(t *testing.T) {
-	if GOARCH == "windows" {
+	if runtime.GOOS == "windows" {
 		return
 	}
 	checkSyslogPost(LOCAL0, LOG_INFO, t)
 }
 
 func TestMultipleLogWrites(t *testing.T) {
-	if GOARCH == "windows" {
+	if runtime.GOOS == "windows" {
 		return
 	}
 	for _, f := range SyslogFacilities() {
@@ -127,7 +128,7 @@ func TestMultipleLogWrites(t *testing.T) {
 }
 
 func TestConcurrentSyslogWrite(t *testing.T) {
-	if GOARCH == "windows" {
+	if runtime.GOOS == "windows" {
 		return
 	}
 	msgChan := make(chan string)
