@@ -55,10 +55,16 @@ func checkSyslogNewProcessor(f Facility, p Priority, t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
+	if GOARCH == "windows" {
+		return
+	}
 	checkSyslogNewProcessor(LOCAL0, LOG_DEBUG, t)
 }
 
 func TestDialSyslog(t *testing.T) {
+	if GOARCH == "windows" {
+		return
+	}
 	conn, err := DialSyslog("", "")
 	if err != nil {
 		t.Fatalf("Couldn't connect to syslog:  %s", err.Error())
@@ -103,10 +109,16 @@ func checkSyslogPost(f Facility, p Priority, t *testing.T) {
 }
 
 func TestSingleLogWrite(t *testing.T) {
+	if GOARCH == "windows" {
+		return
+	}
 	checkSyslogPost(LOCAL0, LOG_INFO, t)
 }
 
 func TestMultipleLogWrites(t *testing.T) {
+	if GOARCH == "windows" {
+		return
+	}
 	for _, f := range SyslogFacilities() {
 		for _, p := range Priorities() {
 			checkSyslogPost(f, p, t)
@@ -115,6 +127,9 @@ func TestMultipleLogWrites(t *testing.T) {
 }
 
 func TestConcurrentSyslogWrite(t *testing.T) {
+	if GOARCH == "windows" {
+		return
+	}
 	msgChan := make(chan string)
 	servAddy, err := startServer(msgChan)
 	if err != nil {
