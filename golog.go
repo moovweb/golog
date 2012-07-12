@@ -18,8 +18,9 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"time"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 // ****************************************************************************
@@ -125,7 +126,7 @@ type Logger struct {
 	// prefix used to prepend to logs if no other prefix is supplied.
 	prefix     string
 	processors map[string]LogProcessor
-	mu         sync.RWMutex   // Read/Write Lock used to protect the prefix.
+	mu         sync.RWMutex // Read/Write Lock used to protect the prefix.
 }
 
 // Storage object used to pass the log data over to the Processor.
@@ -136,7 +137,7 @@ type LogEntry struct {
 	Created  time.Time // Time this message was created.
 }
 
-func (dl *Logger) SetPrefix(newPrefix string)  {
+func (dl *Logger) SetPrefix(newPrefix string) {
 	dl.mu.Lock()
 	dl.prefix = newPrefix
 	dl.mu.Unlock()
@@ -279,11 +280,29 @@ var logchan chan *LogMsg
 
 const logQueueSize = 512
 
+var die *int32 = new(int32)
+
 func init() {
 	logchan = make(chan *LogMsg, logQueueSize)
 	go func() {
 		for entry := range logchan {
 			io.WriteString(entry.w, entry.msg)
+			shouldDie := atomic.LoadInt32(die)
+			if shouldDie > 0 {
+				break
+			}
 		}
 	}()
+}
+
+func FlushLogsAndDie() {
+	atomic.AddInt32(die, 1)
+	for i := 0; i < logQueueSize; i++ {
+		select {
+		case entry := <-logchan:
+			io.WriteString(entry.w, entry.msg)
+		default:
+			break
+		}
+	}
 }
