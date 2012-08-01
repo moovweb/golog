@@ -3,6 +3,9 @@ package golog
 import "testing"
 import "net"
 import "time"
+import "sync"
+import "strings"
+import "sort"
 
 func checkUdpOutput(result string, p Priority, prefix, msg string, t *testing.T) {
 	expected := prefix + msg
@@ -102,5 +105,41 @@ func TestUdpSingleLogWrite(t *testing.T) {
 func TestUdpMultipleLogWrites(t *testing.T) {
 	for _, p := range Priorities() {
 		checkUdpPost(p, t)
+	}
+}
+
+func TestConcurrentUdpWrite(t *testing.T) {
+	msgChan := make(chan string)
+	host, err := startUdpServer(msgChan)
+	if err != nil {
+		t.Fatalf("Couldn't start udp listener:  %s", err.Error())
+	}
+
+	prefix := "udp_conc_test: "
+	minPriority := LOG_DEBUG
+
+	logger := createUdpLogger(host, prefix, minPriority, t)
+
+	total_routines := 50
+	var wg sync.WaitGroup
+	for i := 0; i < total_routines; i++ {
+		var tmp int = i
+		wg.Add(1)
+		go func() {
+			logger.Info("Testing routine %08d", tmp)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	dur, _ := time.ParseDuration("2s")
+	time.Sleep(dur)
+
+	logs := <-msgChan
+	log_lines := strings.Split(strings.TrimSpace(logs), "\n")
+	sort.Strings(log_lines)
+	if len(log_lines) != total_routines {
+		errmsg := "Some log lines are missing! Expected %d, Found %d"
+		t.Fatalf(errmsg, total_routines, len(log_lines))
 	}
 }
