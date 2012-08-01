@@ -51,11 +51,11 @@ func checkUdpNewProcessor(host string, p Priority, t *testing.T) {
 }
 
 func TestNewUdpProcessor(t *testing.T) {
-	checkUdpNewProcessor("localhost:0", LOG_DEBUG, t)
+	checkUdpNewProcessor(":", LOG_DEBUG, t)
 }
 
 func TestDialUdp(t *testing.T) {
-	conn, err := DialUdp("localhost:0")
+	conn, err := DialUdp(":")
 	if err != nil {
 		t.Fatalf("Couldn't connect to udp:  %s", err.Error())
 	} else {
