@@ -8,7 +8,7 @@ import "strings"
 import "sort"
 
 func checkUdpOutput(result string, p Priority, prefix, msg string, t *testing.T) {
-	expected := prefix + msg
+	expected := msg
 	if result != expected {
 		errmsg := "Failed log consistency check:\nExpected '%s'\nResult   '%s'"
 		t.Errorf(errmsg, expected, result)

@@ -33,7 +33,7 @@ type UdpProcessor struct {
 
 func (np *UdpProcessor) Process(entry *LogEntry) {
 	if entry.Priority <= np.GetPriority() {
-		msg := entry.Prefix + entry.Msg
+		msg := entry.Msg
 		np.Dispatcher.Send(msg)
 	}
 }
