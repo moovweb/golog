@@ -171,6 +171,16 @@ func (dl *Logger) GetPriorities() map[string]Priority {
 	return pmap
 }
 
+func (dl *Logger) GetMaxPriority() Priority {
+	max := log_DISABLE
+	for _, proc := range dl.processors {
+		if p := proc.GetPriority(); p > max {
+			max = p
+		}
+	}
+	return max
+}
+
 // Add processors to this logger with the given name.  Names need to be 
 // unique against all other processors.  If a name conflict arises, we
 // simply override the old processor with the same name with the new one.
