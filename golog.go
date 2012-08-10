@@ -214,7 +214,11 @@ func (dl *Logger) Close() {
 // messages to whatever processors this logger is associated with.
 //
 func (dl *Logger) LogP(priority Priority, prefix string, format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
+	message := format
+	if len(args) > 0 {
+		message = fmt.Sprintf(format, args...)
+	}
+
 	if len(message) == 0 || message[len(message)-1] != '\n' {
 		message = message + "\n"
 	}
