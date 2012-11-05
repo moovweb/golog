@@ -3,9 +3,9 @@ package golog
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
-	"io"
 )
 
 // Syslog facilities to log to.  We only list the LOCAL set as others
@@ -108,7 +108,7 @@ func DialSyslog(network, raddr string) (sock io.WriteCloser, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return &SyslogWriter{ syslogConn: syslogConn }, nil
+	return &SyslogWriter{syslogConn: syslogConn}, nil
 }
 
 // ****************************************************************************

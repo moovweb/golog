@@ -28,19 +28,22 @@
 package main
 
 import (
-	"time"
-	"net"
 	"golog"
+	"net"
 	"strconv"
 	"sync"
+	"time"
+
 //	"runtime"
 )
+
 const bufSize = 512
+
 var mu *sync.Mutex = &sync.Mutex{}
 
 func lock_service(msgChan <-chan string, syslog net.Conn) {
 	println("Locked Service started.")
-	for s := range(msgChan) {
+	for s := range msgChan {
 		mu.Lock()
 		syslog.Write([]byte(s))
 		mu.Unlock()
@@ -49,7 +52,7 @@ func lock_service(msgChan <-chan string, syslog net.Conn) {
 
 func service(msgChan <-chan string, syslog net.Conn) {
 	println("Service started.")
-	for s := range(msgChan) {
+	for s := range msgChan {
 		syslog.Write([]byte(s))
 	}
 }
@@ -99,7 +102,7 @@ func test_multi_chan(syslog net.Conn, num_routines, num_writes, num_chans int) {
 
 	reps := num_routines
 	for i := 0; i < reps; i++ {
-		go clog(chans[i % num_chans], num_writes)
+		go clog(chans[i%num_chans], num_writes)
 	}
 
 	d, _ := time.ParseDuration("1000s")
@@ -120,14 +123,14 @@ func test_nochan_lock(syslog net.Conn, num_routines, num_writes int) {
 }
 
 func main() {
-//	runtime.GOMAXPROCS(runtime.NumCPU())
+	//	runtime.GOMAXPROCS(runtime.NumCPU())
 	syslog, err := golog.DialSyslog("", "")
 	if err != nil {
-		println ("Couldn't coonect to syslog:  " + err.Error())
+		println("Couldn't coonect to syslog:  " + err.Error())
 	}
 
-//	test_single_chan(syslog, 5000, 10000)
-//	test_multi_chan(syslog, 5000, 10000, 10)
+	//	test_single_chan(syslog, 5000, 10000)
+	//	test_multi_chan(syslog, 5000, 10000, 10)
 	test_nochan_lock(syslog, 5000, 10000)
 
 }

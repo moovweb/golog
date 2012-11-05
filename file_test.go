@@ -1,13 +1,12 @@
 package golog
 
 import (
-	"testing"
 	"io/ioutil"
 	"strings"
-	"time"
 	"sync"
+	"testing"
+	"time"
 )
-
 
 const file_prefix string = "golog_filetest"
 
@@ -31,8 +30,8 @@ func TestDifferentPriorities(t *testing.T) {
 	proc := NewProcessorFromWriter(LOG_DEBUG, tmpfile, true)
 	logger := NewLogger("file_test: ")
 	logger.AddProcessor("file", proc)
-	
-	for _, p := range(Priorities()) {
+
+	for _, p := range Priorities() {
 		logger.Log(p, "Hey, listen...")
 	}
 
@@ -48,7 +47,7 @@ func TestDifferentPriorities(t *testing.T) {
 		t.Fatalf(msg, len(Priorities()), len(loglines))
 	}
 
-	for i, p := range(Priorities()) {
+	for i, p := range Priorities() {
 		expected := " " + p.String() + ": file_test: Hey, listen..."
 		if !strings.HasSuffix(loglines[i], expected) {
 			t.Errorf("Unexpected log line.\nExpected: <date>%s\nBut was: %s", expected, loglines[i])
@@ -69,7 +68,7 @@ func TestConcurrentLogging(t *testing.T) {
 	num_routines := 5000
 	for i := 0; i < num_routines; i++ {
 		wg.Add(1)
-		go func () {
+		go func() {
 			logger.Notice("Help! I need somebody!")
 			logger.Warning("Help! Not just anybody!")
 			logger.Error("Help! You know I need someone!")
@@ -80,7 +79,7 @@ func TestConcurrentLogging(t *testing.T) {
 	wg.Wait()
 	d, _ := time.ParseDuration("100ms")
 	time.Sleep(d)
-	
+
 	loglines, err := readLogFile(tmpfile.Name())
 	if err != nil {
 		t.Fatalf("Error when reading tmp file:  %s", err.Error())
@@ -88,6 +87,6 @@ func TestConcurrentLogging(t *testing.T) {
 
 	if len(loglines) != (num_routines * 4) {
 		msg := "Unexpected number of log lines.  Expected %d, but was %d"
-		t.Fatalf(msg, num_routines * 4, len(loglines))
+		t.Fatalf(msg, num_routines*4, len(loglines))
 	}
 }

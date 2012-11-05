@@ -5,13 +5,12 @@
 package main
 
 import (
-	"time"
+	"os"
+	"runtime"
 	"strconv"
 	"sync"
-	"runtime"
-	"os"
+	"time"
 )
-
 
 type Work interface {
 	Do() int64
@@ -30,7 +29,7 @@ func (w StupidWork) Do() int64 {
 
 type CompressWork struct {
 	created time.Time
-	data string
+	data    string
 }
 
 func (c *CompressWork) Do() int64 {
@@ -49,7 +48,7 @@ func NewWork() Work {
 	for i := 0; i < 15; i++ {
 		stuff += stuff
 	}
-	return &CompressWork { created: time.Now(), data: stuff }
+	return &CompressWork{created: time.Now(), data: stuff}
 }
 
 type Worker interface {
@@ -62,7 +61,7 @@ type ChanWorker struct {
 }
 
 func (cw *ChanWorker) Start(arg string, avgCap int) {
-	if buf, err := strconv.Atoi(arg); err == nil && buf > 0{
+	if buf, err := strconv.Atoi(arg); err == nil && buf > 0 {
 		cw.MsgChan = make(chan Work, buf)
 	} else {
 		cw.MsgChan = make(chan Work)
@@ -71,12 +70,12 @@ func (cw *ChanWorker) Start(arg string, avgCap int) {
 	go func() {
 		var sum int64 = 0
 		var count int = 0
-		for w := range(cw.MsgChan) {
+		for w := range cw.MsgChan {
 			waitTime := w.Do()
 			sum += waitTime
 			count += 1
 			if count >= avgCap {
-				avgTime := int(sum/int64(count))
+				avgTime := int(sum / int64(count))
 				println(strconv.Itoa(avgTime/1000) + "us")
 				sum, count = 0, 0
 			}
@@ -88,11 +87,10 @@ func (cw *ChanWorker) DoWork(w Work) {
 	cw.MsgChan <- w
 }
 
-
 type LockWorker struct {
-	Mut sync.Mutex
-	Sum int64
-	Count int
+	Mut    sync.Mutex
+	Sum    int64
+	Count  int
 	AvgCap int
 }
 
@@ -106,14 +104,13 @@ func (lw *LockWorker) DoWork(w Work) {
 	lw.Sum += w.Do()
 	lw.Count += 1
 	if lw.Count >= lw.AvgCap {
-		avgTime := int(lw.Sum/int64(lw.Count))
+		avgTime := int(lw.Sum / int64(lw.Count))
 		println(strconv.Itoa(avgTime/1000) + "us")
 		lw.Sum, lw.Count = 0, 0
 	}
 }
 
-
-func GenerateWorkers(kind string, num int) ([]Worker) {
+func GenerateWorkers(kind string, num int) []Worker {
 	workers := make([]Worker, num)
 	if kind == "chan" {
 		for i := 0; i < num; i++ {
@@ -129,7 +126,6 @@ func GenerateWorkers(kind string, num int) ([]Worker) {
 	return workers
 }
 
-
 func StartProducers(numProds, numJobs int, workers []Worker) {
 	for i := 0; i < numProds; i++ {
 		go func() {
@@ -141,8 +137,6 @@ func StartProducers(numProds, numJobs int, workers []Worker) {
 		}()
 	}
 }
-
-
 
 func main() {
 	if len(os.Args) == 1 {
@@ -191,9 +185,8 @@ func main() {
 	println("\tWorker Args: " + wargs)
 	println()
 
-
 	workers := GenerateWorkers(workerType, numWorkers)
-	for _, w := range(workers) {
+	for _, w := range workers {
 		w.Start(wargs, avgCap)
 	}
 

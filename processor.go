@@ -1,9 +1,9 @@
 package golog
 
 import (
+	"fmt"
 	"io"
 	"sync"
-	"fmt"
 )
 
 // ***************************************************************************
@@ -28,7 +28,8 @@ type DefaultProcessor struct {
 	mu         sync.RWMutex   // Read/Write Lock used to protect the priority.
 	priority   Priority       // Messages need to be at least this important to get through.
 	Dispatcher *LogDispatcher // Dispatcher used to send messages to the channel
-	Verbose bool
+	TimeFormat string         // Format string for time, if blank, we use a default.
+	Verbose    bool
 }
 
 // Atomically set the new priority.  All accesses to priority need to be
@@ -49,9 +50,14 @@ func (df *DefaultProcessor) GetPriority() Priority {
 func (df *DefaultProcessor) Process(entry *LogEntry) {
 	if entry.Priority <= df.GetPriority() {
 		time := entry.Created
-		timeStamp := fmt.Sprintf("%s %d %02d:%02d:%02d ", time.Month().String()[0:3], time.Day(), time.Hour(), time.Minute(), time.Second())
-		msg := ""
+		var timeStamp string
+		if len(df.TimeFormat) == 0 {
+			timeStamp = fmt.Sprintf("%s %d %02d:%02d:%02d ", time.Month().String()[0:3], time.Day(), time.Hour(), time.Minute(), time.Second())
+		} else {
+			timeStamp = time.Format(df.TimeFormat)
+		}
 
+		msg := ""
 		if df.Verbose {
 			msg += timeStamp + entry.Priority.String() + ": "
 		}
@@ -74,4 +80,13 @@ func NewProcessor(priority Priority, dispatcher *LogDispatcher, verbose bool) Lo
 func NewProcessorFromWriter(priority Priority, writer io.WriteCloser, verbose bool) LogProcessor {
 	d := NewLogDispatcher(writer)
 	return NewProcessor(priority, d, verbose)
+}
+
+func NewProcessorWithTimeFormat(priority Priority, dispatcher *LogDispatcher, format string) LogProcessor {
+	return &DefaultProcessor{
+		priority:   priority,
+		Dispatcher: dispatcher,
+		Verbose:    true,
+		TimeFormat: format,
+	}
 }
