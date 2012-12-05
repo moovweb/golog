@@ -131,6 +131,7 @@ func main() {
 
 	//	test_single_chan(syslog, 5000, 10000)
 	//	test_multi_chan(syslog, 5000, 10000, 10)
-	test_nochan_lock(syslog, 5000, 10000)
+	// test_nochan_lock(syslog, 5000, 10000)
+	_ = syslog
 
 }

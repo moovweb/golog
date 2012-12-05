@@ -33,7 +33,7 @@ import (
 	"time"
 )
 
-func main() {
+func main_rwlock() {
 	teapot := 8675309
 	//rw := &sync.RWMutex{}
 	starter, finisher := &sync.WaitGroup{}, &sync.WaitGroup{}

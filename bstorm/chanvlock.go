@@ -138,7 +138,7 @@ func StartProducers(numProds, numJobs int, workers []Worker) {
 	}
 }
 
-func main() {
+func main_chanvlock() {
 	if len(os.Args) == 1 {
 		println("Usage:")
 		println("./" + os.Args[0] + " <lock|chan> <numProducers> <numJobs> <avgCap> <numWorkers> [...workerArgs]")
