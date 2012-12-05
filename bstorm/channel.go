@@ -28,6 +28,7 @@
 package main
 
 import (
+	"fmt"
 	"golog"
 	"net"
 	"strconv"
@@ -42,7 +43,7 @@ const bufSize = 512
 var mu *sync.Mutex = &sync.Mutex{}
 
 func lock_service(msgChan <-chan string, syslog net.Conn) {
-	println("Locked Service started.")
+	fmt.Println("Locked Service started.")
 	for s := range msgChan {
 		mu.Lock()
 		syslog.Write([]byte(s))
@@ -51,7 +52,7 @@ func lock_service(msgChan <-chan string, syslog net.Conn) {
 }
 
 func service(msgChan <-chan string, syslog net.Conn) {
-	println("Service started.")
+	fmt.Println("Service started.")
 	for s := range msgChan {
 		syslog.Write([]byte(s))
 	}
@@ -64,7 +65,7 @@ func clog(msgChan chan<- string, reps int) {
 	}
 	sum := int64(time.Since(t))
 	avg := int(sum / int64(reps))
-	println("Average wait time:  " + strconv.Itoa(avg))
+	fmt.Println("Average wait time:  " + strconv.Itoa(avg))
 }
 
 func clogWrite(syslog net.Conn, reps int) {
@@ -76,7 +77,7 @@ func clogWrite(syslog net.Conn, reps int) {
 	}
 	sum := int64(time.Since(t))
 	avg := int(sum / int64(reps))
-	println("Average wait time:  " + strconv.Itoa(avg))
+	fmt.Println("Average wait time:  " + strconv.Itoa(avg))
 }
 
 func test_single_chan(syslog net.Conn, num_routines, num_writes int) {
@@ -126,7 +127,7 @@ func main() {
 	//	runtime.GOMAXPROCS(runtime.NumCPU())
 	syslog, err := golog.DialSyslog("", "")
 	if err != nil {
-		println("Couldn't coonect to syslog:  " + err.Error())
+		fmt.Println("Couldn't coonect to syslog:  " + err.Error())
 	}
 
 	//	test_single_chan(syslog, 5000, 10000)

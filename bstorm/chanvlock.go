@@ -5,6 +5,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"strconv"
@@ -76,7 +77,7 @@ func (cw *ChanWorker) Start(arg string, avgCap int) {
 			count += 1
 			if count >= avgCap {
 				avgTime := int(sum / int64(count))
-				println(strconv.Itoa(avgTime/1000) + "us")
+				fmt.Println(strconv.Itoa(avgTime/1000) + "us")
 				sum, count = 0, 0
 			}
 		}
@@ -105,7 +106,7 @@ func (lw *LockWorker) DoWork(w Work) {
 	lw.Count += 1
 	if lw.Count >= lw.AvgCap {
 		avgTime := int(lw.Sum / int64(lw.Count))
-		println(strconv.Itoa(avgTime/1000) + "us")
+		fmt.Println(strconv.Itoa(avgTime/1000) + "us")
 		lw.Sum, lw.Count = 0, 0
 	}
 }
@@ -138,11 +139,16 @@ func StartProducers(numProds, numJobs int, workers []Worker) {
 	}
 }
 
+func printAndExit(msg string) {
+	println(msg)
+	os.Exit(1)
+}
+
 func main_chanvlock() {
 	if len(os.Args) == 1 {
-		println("Usage:")
-		println("./" + os.Args[0] + " <lock|chan> <numProducers> <numJobs> <avgCap> <numWorkers> [...workerArgs]")
-		println()
+		printAndExit(
+			"Usage:\n\t" + 
+			"./" + os.Args[0] + " <lock|chan> <numProducers> <numJobs> <avgCap> <numWorkers> [...workerArgs]\n\n")
 		os.Exit(1)
 	}
 
@@ -150,25 +156,21 @@ func main_chanvlock() {
 	workerType := os.Args[1]
 	numProds, err := strconv.Atoi(os.Args[2])
 	if err != nil {
-		println("Number of producers is not an integer:  " + os.Args[2])
-		os.Exit(1)
+		printAndExit("Number of producers is not an integer:  " + os.Args[2])
 	}
 	numJobs, err := strconv.Atoi(os.Args[3])
 	if err != nil {
-		println("Number of jobs is not an integer: " + os.Args[3])
-		os.Exit(1)
+		printAndExit("Number of jobs is not an integer: " + os.Args[3])
 	}
 
 	avgCap, err := strconv.Atoi(os.Args[4])
 	if err != nil {
-		println("The number of units to calculate the average for is not an integer.")
-		os.Exit(1)
+		printAndExit("The number of units to calculate the average for is not an integer.")
 	}
 
 	numWorkers, err := strconv.Atoi(os.Args[5])
 	if err != nil {
-		println("The number of worker resources is not an integer.")
-		os.Exit(1)
+		printAndExit("The number of worker resources is not an integer.")
 	}
 
 	wargs := ""
@@ -176,14 +178,14 @@ func main_chanvlock() {
 		wargs = os.Args[6]
 	}
 
-	println("Using the following params:")
-	println("\tType: " + workerType)
-	println("\tNum Prods: " + strconv.Itoa(numProds))
-	println("\tNum Jobs: " + strconv.Itoa(numJobs))
-	println("\tAvg Cap: " + strconv.Itoa(avgCap))
-	println("\tNum Workers: " + strconv.Itoa(numWorkers))
-	println("\tWorker Args: " + wargs)
-	println()
+	fmt.Println("Using the following params:")
+	fmt.Println("\tType: " + workerType)
+	fmt.Println("\tNum Prods: " + strconv.Itoa(numProds))
+	fmt.Println("\tNum Jobs: " + strconv.Itoa(numJobs))
+	fmt.Println("\tAvg Cap: " + strconv.Itoa(avgCap))
+	fmt.Println("\tNum Workers: " + strconv.Itoa(numWorkers))
+	fmt.Println("\tWorker Args: " + wargs)
+	fmt.Println()
 
 	workers := GenerateWorkers(workerType, numWorkers)
 	for _, w := range workers {
