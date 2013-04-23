@@ -102,7 +102,7 @@ func checkSyslogPost(f Facility, p Priority, t *testing.T) {
 
 	logger := createSyslogger(servAddy, prefix, f, minPriority, t)
 
-	logger.Log(p, message)
+	logger.Logf(p, message)
 	rcvd := <-msgChan
 	checkOutput(rcvd, f, p, prefix, message+"\n", t)
 
@@ -149,7 +149,7 @@ func TestConcurrentSyslogWrite(t *testing.T) {
 		var tmp int = i
 		wg.Add(1)
 		go func() {
-			logger.Info("Testing routine %08d", tmp)
+			logger.Infof("Testing routine %08d", tmp)
 			wg.Done()
 		}()
 	}

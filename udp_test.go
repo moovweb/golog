@@ -91,7 +91,7 @@ func checkUdpPost(p Priority, t *testing.T) {
 
 	logger := createUdpLogger(host, prefix, minPriority, t)
 
-	logger.Log(p, message)
+	logger.Logf(p, message)
 	rcvd := <-msgChan
 	checkUdpOutput(rcvd, p, prefix, message+"\n", t)
 
@@ -126,7 +126,7 @@ func TestConcurrentUdpWrite(t *testing.T) {
 		var tmp int = i
 		wg.Add(1)
 		go func() {
-			logger.Info("Testing routine %08d", tmp)
+			logger.Infof("Testing routine %08d", tmp)
 			wg.Done()
 		}()
 	}

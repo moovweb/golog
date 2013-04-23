@@ -40,7 +40,7 @@ func checkFiltersForPriority(priority Priority, logger *Logger, chw *ChanWriter,
 	logger.SetPriority("chan", priority)
 	// Try to write a log of all priority levels, regardless of what our filter is
 	for _, p := range Priorities() {
-		logger.Log(p, "Mmm, cherry blossom tea <3")
+		logger.Logf(p, "Mmm, cherry blossom tea <3")
 	}
 	dur, _ := time.ParseDuration("100ms")
 	time.Sleep(dur)

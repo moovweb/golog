@@ -213,7 +213,7 @@ func (dl *Logger) Close() {
 // Begin Logging interface.  The following methods are used for logging
 // messages to whatever processors this logger is associated with.
 //
-func (dl *Logger) LogP(priority Priority, prefix string, format string, args ...interface{}) {
+func (dl *Logger) Plogf(priority Priority, prefix string, format string, args ...interface{}) {
 	message := format
 	if len(args) > 0 {
 		message = fmt.Sprintf(format, args...)
@@ -235,44 +235,44 @@ func (dl *Logger) LogP(priority Priority, prefix string, format string, args ...
 	}
 }
 
-func (dl *Logger) Log(p Priority, format string, args ...interface{}) {
+func (dl *Logger) Logf(p Priority, format string, args ...interface{}) {
 	dl.mu.RLock()
 	prefix := dl.prefix
 	dl.mu.RUnlock()
 
-	dl.LogP(p, prefix, format, args...)
+	dl.Plogf(p, prefix, format, args...)
 }
 
-func (dl *Logger) Debug(format string, args ...interface{}) {
-	dl.Log(LOG_DEBUG, format, args...)
+func (dl *Logger) Debugf(format string, args ...interface{}) {
+	dl.Logf(LOG_DEBUG, format, args...)
 }
 
-func (dl *Logger) Info(format string, args ...interface{}) {
-	dl.Log(LOG_INFO, format, args...)
+func (dl *Logger) Infof(format string, args ...interface{}) {
+	dl.Logf(LOG_INFO, format, args...)
 }
 
-func (dl *Logger) Notice(format string, args ...interface{}) {
-	dl.Log(LOG_NOTICE, format, args...)
+func (dl *Logger) Noticef(format string, args ...interface{}) {
+	dl.Logf(LOG_NOTICE, format, args...)
 }
 
-func (dl *Logger) Warning(format string, args ...interface{}) {
-	dl.Log(LOG_WARNING, format, args...)
+func (dl *Logger) Warningf(format string, args ...interface{}) {
+	dl.Logf(LOG_WARNING, format, args...)
 }
 
-func (dl *Logger) Error(format string, args ...interface{}) {
-	dl.Log(LOG_ERR, format, args...)
+func (dl *Logger) Errorf(format string, args ...interface{}) {
+	dl.Logf(LOG_ERR, format, args...)
 }
 
-func (dl *Logger) Critical(format string, args ...interface{}) {
-	dl.Log(LOG_CRIT, format, args...)
+func (dl *Logger) Criticalf(format string, args ...interface{}) {
+	dl.Logf(LOG_CRIT, format, args...)
 }
 
-func (dl *Logger) Alert(format string, args ...interface{}) {
-	dl.Log(LOG_ALERT, format, args...)
+func (dl *Logger) Alertf(format string, args ...interface{}) {
+	dl.Logf(LOG_ALERT, format, args...)
 }
 
-func (dl *Logger) Emergency(format string, args ...interface{}) {
-	dl.Log(LOG_EMERG, format, args...)
+func (dl *Logger) Emergencyf(format string, args ...interface{}) {
+	dl.Logf(LOG_EMERG, format, args...)
 }
 
 // Create a new empty Logger with the given prefix.

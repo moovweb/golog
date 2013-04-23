@@ -32,7 +32,7 @@ func TestDifferentPriorities(t *testing.T) {
 	logger.AddProcessor("file", proc)
 
 	for _, p := range Priorities() {
-		logger.Log(p, "Hey, listen...")
+		logger.Logf(p, "Hey, listen...")
 	}
 
 	d, _ := time.ParseDuration("100ms")
@@ -69,10 +69,10 @@ func TestConcurrentLogging(t *testing.T) {
 	for i := 0; i < num_routines; i++ {
 		wg.Add(1)
 		go func() {
-			logger.Notice("Help! I need somebody!")
-			logger.Warning("Help! Not just anybody!")
-			logger.Error("Help! You know I need someone!")
-			logger.Critical("Heeeeeeeeeeeeelp!")
+			logger.Noticef("Help! I need somebody!")
+			logger.Warningf("Help! Not just anybody!")
+			logger.Errorf("Help! You know I need someone!")
+			logger.Criticalf("Heeeeeeeeeeeeelp!")
 			wg.Done()
 		}()
 	}
