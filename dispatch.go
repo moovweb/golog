@@ -13,7 +13,7 @@ type LogMsg struct {
 // ****************************************************************************
 // The LogDispatcher will take incoming log messages, create LogMsg
 // objects, and send them through the channel that it is associated with.
-// 
+//
 type LogDispatcher struct {
 	w  io.WriteCloser // The resource Writer this dispatcher is associated with.
 	ch chan *LogMsg   // The channel to send LogMsg objects to.

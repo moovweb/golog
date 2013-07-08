@@ -10,11 +10,11 @@ import (
 // LogProcessor interface defines the method that we expect all LogProcessors
 // to have.  For most intents and purposes, a DefaultProcessor should suffice,
 // however if special formatting is required, a new Processor could be made
-// (see syslog.go).  
+// (see syslog.go).
 //
 // The LogProcessor also offers the ability to change its default Priority
-// level at runtime using the SetPriority(...) method.  Implementing 
-// Processors need to make sure that SetPriority and GetPriority are 
+// level at runtime using the SetPriority(...) method.  Implementing
+// Processors need to make sure that SetPriority and GetPriority are
 // thread safe.  Use the DefaultProcessor as an example.
 //
 type LogProcessor interface {

@@ -1,13 +1,13 @@
-// The golog package is a logging framework for the Go language based on the 
-// go routine and channel features of the language.  In essence, log 
-// messages sent to a logger are sent through a global channel where a 
+// The golog package is a logging framework for the Go language based on the
+// go routine and channel features of the language.  In essence, log
+// messages sent to a logger are sent through a global channel where a
 // go routine listens to and services each log write serially.
 //
 // As of right now, all messages are sent through a single logger channel,
 // guranteeing serialization of log messages.  In the future, golog will
 // switch to the model of having a channel and go routine per resource
-// (such as file, network, console, etc...) so that writes to any single 
-// resource are serialized, but writes to different resources can be 
+// (such as file, network, console, etc...) so that writes to any single
+// resource are serialized, but writes to different resources can be
 // parallelized.
 //
 package golog
@@ -181,7 +181,7 @@ func (dl *Logger) GetMaxPriority() Priority {
 	return max
 }
 
-// Add processors to this logger with the given name.  Names need to be 
+// Add processors to this logger with the given name.  Names need to be
 // unique against all other processors.  If a name conflict arises, we
 // simply override the old processor with the same name with the new one.
 func (dl *Logger) AddProcessor(name string, processor LogProcessor) {
@@ -276,7 +276,7 @@ func (dl *Logger) Emergencyf(format string, args ...interface{}) {
 }
 
 // Create a new empty Logger with the given prefix.
-// The prefix will be prepended to every log message unless 
+// The prefix will be prepended to every log message unless
 // LogP(...) is used, in which case, the prefix supplied by the 'prefix'
 // parameter will be used instead.
 //
@@ -286,8 +286,8 @@ func NewLogger(prefix string) *Logger {
 
 // ****************************************************************************
 // The following section covers the part of the Logger which listens to the
-// channel for new messages to write.  All messages that are logged are 
-// eventually sent to this channel, and the following go routine services them 
+// channel for new messages to write.  All messages that are logged are
+// eventually sent to this channel, and the following go routine services them
 // to their appropriate Writer objects.
 //
 var logchan chan *LogMsg
