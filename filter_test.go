@@ -1,4 +1,4 @@
-// create a channel writer and make sure that messages are 
+// create a channel writer and make sure that messages are
 // being filtered at different levels.  Also use SetPriority and GetPriority
 
 package golog

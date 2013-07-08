@@ -9,11 +9,11 @@
 //
 // 1)	Wrapping the priority field in the Processor with a RW lock and offering
 //		Setter/Getter methods for it.
-// 2)	Pushing the checking/filtering of the priority of a message to the 
+// 2)	Pushing the checking/filtering of the priority of a message to the
 //		writer go routine which writes the message to the appropriate writer
 // 3)	Each go routine in the main application has its own logger and thus,
 //		will have to update the priority accordingly.  However, since the logger
-//		is only used in a single go routine, there's no race conditions in 
+//		is only used in a single go routine, there's no race conditions in
 //		simply updating the priority.
 //
 // We chose solution (1) after the test below since the penalty for adding
@@ -22,7 +22,7 @@
 //
 // Solution (2) is elegant in the sense that it would require no extra locking,
 // however, it would mean that the application as a whole would have to do more
-// work as messages that would be filtered out before hand will now have to 
+// work as messages that would be filtered out before hand will now have to
 // go through the log channel (then to get filtered out).
 //
 package main

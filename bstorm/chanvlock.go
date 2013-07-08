@@ -147,8 +147,8 @@ func printAndExit(msg string) {
 func main_chanvlock() {
 	if len(os.Args) == 1 {
 		printAndExit(
-			"Usage:\n\t" + 
-			"./" + os.Args[0] + " <lock|chan> <numProducers> <numJobs> <avgCap> <numWorkers> [...workerArgs]\n\n")
+			"Usage:\n\t" +
+				"./" + os.Args[0] + " <lock|chan> <numProducers> <numJobs> <avgCap> <numWorkers> [...workerArgs]\n\n")
 		os.Exit(1)
 	}
 
