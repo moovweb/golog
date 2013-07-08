@@ -123,8 +123,8 @@ type SyslogProcessor struct {
 }
 
 // Not only do we filter out messages whose priority is not high enough
-// (DefaultProcessor behavior), but we also format the log message in a 
-// special way using the priority and facility in a way that syslog 
+// (DefaultProcessor behavior), but we also format the log message in a
+// special way using the priority and facility in a way that syslog
 // understand.
 const syslogMsgFormat = "<%d>%s: %s: %s"
 

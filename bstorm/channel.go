@@ -4,8 +4,8 @@
 // different logging implementations and see how they compare.
 //
 // Implementations:
-//	1.	A logger contains a single channel it sends messages to where a 
-//			servicing routine listens on and writes to the writer.  
+//	1.	A logger contains a single channel it sends messages to where a
+//			servicing routine listens on and writes to the writer.
 //	2.	A logger contains a set number of channels per writer, and we have
 //			multiple servicing routines.  They protect eachother with a lock.
 //	3.	We avoid using channels all together and just write the log in place,
