@@ -29,13 +29,13 @@ package main
 
 import (
 	"fmt"
-	"golog"
+	"github.com/moovweb/golog"
 	"net"
 	"strconv"
 	"sync"
 	"time"
 
-//	"runtime"
+	//	"runtime"
 )
 
 const bufSize = 512
