@@ -48,7 +48,7 @@ func TestDifferentPriorities(t *testing.T) {
 	}
 
 	for i, p := range Priorities() {
-		expected := " " + p.String() + ": file_test: Hey, listen..."
+		expected := " " + p.ShortString() + ": file_test: Hey, listen..."
 		if !strings.HasSuffix(loglines[i], expected) {
 			t.Errorf("Unexpected log line.\nExpected: <date>%s\nBut was: %s", expected, loglines[i])
 		}
