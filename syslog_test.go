@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"os"
 )
 
 func checkOutput(result string, f Facility, p Priority, prefix, msg string, t *testing.T) {
@@ -18,6 +19,10 @@ func checkOutput(result string, f Facility, p Priority, prefix, msg string, t *t
 		errmsg := "Failed log consistency check:\nExpected '%s'\nResult   '%s'"
 		t.Errorf(errmsg, expectedStart+" ... "+expectedEnd, result)
 	}
+}
+
+func syslogIsAvailable() bool {
+	return runtime.GOOS != "windows" && os.Getenv("IN_DOCKER_FLAG") != "1"
 }
 
 func runSyslogReader(c net.PacketConn, msgChan chan<- string) {
@@ -56,14 +61,14 @@ func checkSyslogNewProcessor(f Facility, p Priority, t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if !syslogIsAvailable() {
 		return
 	}
 	checkSyslogNewProcessor(LOCAL0, LOG_DEBUG, t)
 }
 
 func TestDialSyslog(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if !syslogIsAvailable() {
 		return
 	}
 	conn, err := DialSyslog("", "")
@@ -110,14 +115,14 @@ func checkSyslogPost(f Facility, p Priority, t *testing.T) {
 }
 
 func TestSingleLogWrite(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if !syslogIsAvailable() {
 		return
 	}
 	checkSyslogPost(LOCAL0, LOG_INFO, t)
 }
 
 func TestMultipleLogWrites(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if !syslogIsAvailable() {
 		return
 	}
 	for _, f := range SyslogFacilities() {
@@ -128,7 +133,7 @@ func TestMultipleLogWrites(t *testing.T) {
 }
 
 func TestConcurrentSyslogWrite(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if !syslogIsAvailable() {
 		return
 	}
 	msgChan := make(chan string)
