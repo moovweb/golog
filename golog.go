@@ -91,6 +91,30 @@ func (p Priority) String() string {
 	return "UNKNOWN(" + strconv.Itoa(int(p)) + ")"
 }
 
+func (p Priority) ShortString() string {
+	switch p {
+	case LOG_EMERG:
+		return "EMERG"
+	case LOG_ALERT:
+		return "ALERT"
+	case LOG_CRIT:
+		return "CRTCL"
+	case LOG_ERR:
+		return "ERROR"
+	case LOG_WARNING:
+		return "WARN "
+	case LOG_NOTICE:
+		return "NTICE"
+	case LOG_INFO:
+		return "INFO "
+	case LOG_DEBUG:
+		return "DEBUG"
+	case log_DISABLE:
+		return "DSBLD"
+	}
+	return "UNKNOWN(" + strconv.Itoa(int(p)) + ")"
+}
+
 func ParsePriority(p string) Priority {
 	p = strings.ToUpper(p)
 	switch {
