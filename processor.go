@@ -1,9 +1,9 @@
 package golog
 
 import (
-	"fmt"
 	"io"
 	"sync"
+	"bytes"
 )
 
 // ***************************************************************************
@@ -22,6 +22,7 @@ type LogProcessor interface {
 	SetPriority(Priority)
 	Process(*LogEntry)
 	Close() error
+	SetTimeFormat(string)
 }
 
 type DefaultProcessor struct {
@@ -47,23 +48,32 @@ func (df *DefaultProcessor) GetPriority() Priority {
 	return df.priority
 }
 
+func (df *DefaultProcessor) SetTimeFormat(timeFormat string) {
+	df.mu.Lock()
+	df.TimeFormat = timeFormat
+	df.mu.Unlock()
+}
+
 func (df *DefaultProcessor) Process(entry *LogEntry) {
 	if entry.Priority <= df.GetPriority() {
 		time := entry.Created
-		var timeStamp string
+
+		var msg bytes.Buffer
+
 		if len(df.TimeFormat) == 0 {
-			timeStamp = fmt.Sprintf("%s %d %02d:%02d:%02d ", time.Month().String()[0:3], time.Day(), time.Hour(), time.Minute(), time.Second())
+			// Default logging format is ISO8601 with milliseconds without TZ
+			msg.WriteString(time.Format("2006-01-02 15:04:05.000"))
 		} else {
-			timeStamp = time.Format(df.TimeFormat)
+			msg.WriteString(time.Format(df.TimeFormat))
 		}
+		msg.WriteString(" ")
+		msg.WriteString(entry.Priority.ShortString())
+		msg.WriteString(": ")
 
-		msg := ""
-		if df.Verbose {
-			msg += timeStamp + entry.Priority.String() + ": "
-		}
+		msg.WriteString(entry.Prefix)
+		msg.WriteString(entry.Msg)
 
-		msg += entry.Prefix + entry.Msg
-		df.Dispatcher.Send(msg)
+		df.Dispatcher.Send(msg.String())
 	}
 }
 
