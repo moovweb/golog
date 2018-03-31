@@ -1,9 +1,9 @@
 package golog
 
 import (
+	"bytes"
 	"io"
 	"sync"
-	"bytes"
 )
 
 // ***************************************************************************
@@ -56,21 +56,8 @@ func (df *DefaultProcessor) SetTimeFormat(timeFormat string) {
 
 func (df *DefaultProcessor) Process(entry *LogEntry) {
 	if entry.Priority <= df.GetPriority() {
-		time := entry.Created
-
 		var msg bytes.Buffer
 
-		if len(df.TimeFormat) == 0 {
-			// Default logging format is ISO8601 with milliseconds without TZ
-			msg.WriteString(time.Format("2006-01-02 15:04:05.000"))
-		} else {
-			msg.WriteString(time.Format(df.TimeFormat))
-		}
-		msg.WriteString(" ")
-		msg.WriteString(entry.Priority.ShortString())
-		msg.WriteString(": ")
-
-		msg.WriteString(entry.Prefix)
 		msg.WriteString(entry.Msg)
 
 		df.Dispatcher.Send(msg.String())
