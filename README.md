@@ -15,12 +15,12 @@ Getting started is pretty easy.  Simply create a new logger and add processors t
 
 		console := golog.NewConsoleProcessor(golog.LOG_INFO, verboseBoolean) // only log messages more important than or equal to info.
 		logger := golog.NewLogger("some prefix here:  ")
-		logger.AddProcessor(console)
+		logger.AddProcessor("ConsoleLogger", console) // "ConsoleLogger" is name for the logger
 
 		...
 
-		logger.Info("Hey, listen...")
-		logger.Warning("Logging some crazy stuff here!")
+		logger.Infof("Hey, listen...")
+		logger.Warningf("Logging some crazy stuff here!")
 
 
 Future Work
